@@ -1,0 +1,25 @@
+    /* 1. Container pembungkus harus punya tinggi yang pasti */
+    .table-freeze-container {
+        max-height: 500px !important;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        position: relative;
+    }
+
+    /* 2. Target langsung ke elemen <th> di dalam header */
+    .table-freeze-container table thead th {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 0 !important;
+        background-color: #ffffff !important;
+        /* Wajib ada warna biar gak transparan */
+        z-index: 999 !important;
+    }
+
+    /* 3. Mencegah gap putih di header */
+    .table-freeze-container table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+  
