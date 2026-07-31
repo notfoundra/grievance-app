@@ -7,6 +7,11 @@ use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\GrievanceCaseModel;
 use App\Models\GrievanceAttachmentModel;
 use App\Models\GrievanceUpdateModel;
+use App\Models\MasterSiteModel;
+use App\Models\MasterDepartmentModel;
+use App\Models\MasterCaseTypeModel;
+use App\Models\MasterStatusModel;
+use App\Models\MasterPriorityModel;
 
 class Grievance extends BaseController
 {
@@ -23,131 +28,49 @@ class Grievance extends BaseController
 
     public function index()
     {
-        return view('grievance_main');
-    }
-    public function datatable()
-    {
-        $filter = [
+        $siteModel       = new MasterSiteModel();
+        $deptModel       = new MasterDepartmentModel();
+        $caseTypeModel   = new MasterCaseTypeModel();
+        $statusModel     = new MasterStatusModel();
+        $data = [
 
-            'site'       => $this->request->getGet('site'),
+            'sites'       => $siteModel->where('is_active', 1)->findAll(),
 
-            'status'     => $this->request->getGet('status'),
+            'departments' => $deptModel->where('is_active', 1)->orderBy('name')->findAll(),
 
-            'department' => $this->request->getGet('department'),
+            'caseTypes'   => $caseTypeModel->where('is_active', 1)->orderBy('name')->findAll(),
 
-            'keyword'    => $this->request->getGet('search'),
-
-        ];
-
-        $data = $this->caseModel
-            ->getDatatable($filter)
-            ->get()
-            ->getResultArray();
-
-        return $this->response->setJSON([
-            'data' => $data
-        ]);
-    }
-    public function detail($id)
-    {
-        $case = $this->caseModel->getDetail($id);
-
-        if (!$case) {
-
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
-        }
-
-        return $this->response->setJSON($case);
-    }
-    public function dashboardSummary()
-    {
-        return $this->response->setJSON(
-
-            $this->caseModel->getDashboardSummary()
-
-        );
-    }
-    public function monthlyTrend()
-    {
-        $year = $this->request->getGet('year') ?? date('Y');
-
-        return $this->response->setJSON(
-
-            $this->caseModel->getMonthlyTrend($year)
-
-        );
-    }
-    public function overdueCases()
-    {
-        return $this->response->setJSON(
-
-            $this->caseModel->getOverdueCases()
-
-        );
-    }
-    public function store()
-    {
-        $rules = [
-
-            'site_id' => 'required',
-
-            'channel_id' => 'required',
-
-            'message_type_id' => 'required',
-
-            'case_type_id' => 'required',
-
-            'department_id' => 'required',
-
-            'priority_id' => 'required',
-
-            'message' => 'required'
+            'statuses'    => $statusModel->where('is_active', 1)->orderBy('sort_order')->findAll()
 
         ];
 
-        if (!$this->validate($rules)) {
-
-            return $this->response
-                ->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'errors' => $this->validator->getErrors()
-                ]);
-        }
-
-        $data = $this->request->getPost();
-
-        $data['case_no'] = $this->caseModel->generateCaseNumber();
-
-        $data['status_id'] = 1;
-
-        $data['created_by'] = session()->get('user_id');
-
-        $this->caseModel->insert($data);
-
-        return $this->response->setJSON([
-            'status' => true,
-            'message' => 'Case created successfully.'
-        ]);
+        return view('grievance/index', $data);
     }
-    public function updateStatus($id)
+    public function caseLog()
     {
-        $this->caseModel->update($id, [
+        $data = [
 
-            'status_id' => $this->request->getPost('status_id')
+            'sites' => (new MasterSiteModel())
+                ->where('is_active', 1)
+                ->findAll(),
 
-        ]);
+            'departments' => (new MasterDepartmentModel())
+                ->where('is_active', 1)
+                ->orderBy('name')
+                ->findAll(),
 
-        return $this->response->setJSON([
-            'status' => true
-        ]);
-    }
-    public function delete($id)
-    {
-        $this->caseModel->delete($id);
+            'priorities' => (new MasterPriorityModel())
+                ->where('is_active', 1)
+                ->findAll(),
 
-        return $this->response->setJSON([
-            'status' => true
-        ]);
+            'statuses' => (new MasterStatusModel())
+                ->where('is_active', 1)
+                ->orderBy('sort_order')
+                ->findAll(),
+
+        ];
+
+
+        return view('grievance/case_log', $data);
     }
 }

@@ -5,21 +5,19 @@ use CodeIgniter\Router\RouteCollection;
 /** @var RouteCollection $routes */
 $routes->group('grievance', function ($routes) {
 
-    $routes->get('/', 'GrievanceController::index');
+    $routes->get('/', 'Grievance::index');
+    $routes->get('case-log', 'Grievance::caseLog');
+});
+$routes->group('dashboard', function ($routes) {
 
-    $routes->get('datatable', 'GrievanceController::datatable');
+    $routes->get('summary', 'DashboardController::summary');
+});
+$routes->group('case', function ($routes) {
 
-    $routes->get('dashboard-summary', 'GrievanceController::dashboardSummary');
+    $routes->post('ajax-list', 'CaseController::ajaxList');
 
-    $routes->get('monthly-trend', 'GrievanceController::monthlyTrend');
-
-    $routes->get('overdue', 'GrievanceController::overdueCases');
-
-    $routes->get('detail/(:num)', 'GrievanceController::detail/$1');
-
-    $routes->post('store', 'GrievanceController::store');
-
-    $routes->post('update-status/(:num)', 'GrievanceController::updateStatus/$1');
-
-    $routes->delete('delete/(:num)', 'GrievanceController::delete/$1');
+    $routes->get('case-detail/(:num)', 'CaseController::caseDetail/$1');
+    $routes->get('new', 'CaseController::newCase');
+    $routes->post('store', 'CaseController::store');
+    $routes->get('attachment/(:num)', 'CaseController::downloadAttachment/$1');
 });

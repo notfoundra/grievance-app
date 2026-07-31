@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
-class GrievanceAttachmentModel extends BaseModel
-{
-    protected $table = 'grievance_attachments';
+use CodeIgniter\Model;
 
-    protected $primaryKey = 'id';
+class GrievanceAttachmentModel extends Model
+{
+    protected $table            = 'grievance_attachments';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
 
     protected $allowedFields = [
         'case_id',
@@ -16,6 +20,15 @@ class GrievanceAttachmentModel extends BaseModel
         'file_path',
         'extension',
         'mime_type',
-        'file_size'
+        'file_size',
     ];
+
+    protected $useTimestamps = true;
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+
+    public function forCase(int $caseId)
+    {
+        return $this->where('case_id', $caseId)->findAll();
+    }
 }
