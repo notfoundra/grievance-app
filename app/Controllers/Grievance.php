@@ -4,45 +4,150 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
+use App\Models\GrievanceCaseModel;
+use App\Models\GrievanceAttachmentModel;
+use App\Models\GrievanceUpdateModel;
 
 class Grievance extends BaseController
 {
+    protected GrievanceCaseModel $caseModel;
+    protected GrievanceAttachmentModel $attachmentModel;
+    protected GrievanceUpdateModel $updateModel;
+
+    public function __construct()
+    {
+        $this->caseModel       = new GrievanceCaseModel();
+        $this->attachmentModel = new GrievanceAttachmentModel();
+        $this->updateModel     = new GrievanceUpdateModel();
+    }
+
     public function index()
     {
-        $data = [
-            'title'       => 'Digital Grievance Management',
-            'total_kasus' => 42,
-            'in_progress' => 8,
-            'resolved'    => 31,
-            'cases'       => [
-                [
-                    'no_kasus' => 'GRV-2026-001',
-                    'kategori' => 'Fasilitas Pabrik',
-                    'pic'      => 'Budi S.',
-                    'due_date' => '02 Agu',
-                    'status'   => 'Dalam Proses',
-                    'badge'    => 'bg-warning text-dark'
-                ],
-                [
-                    'no_kasus' => 'GRV-2026-002',
-                    'kategori' => 'Kesehatan & Keselamatan',
-                    'pic'      => 'Siti A.',
-                    'due_date' => '30 Jul',
-                    'status'   => 'Urgent',
-                    'badge'    => 'bg-danger text-white'
-                ],
-                [
-                    'no_kasus' => 'GRV-2026-003',
-                    'kategori' => 'Administrasi / HR',
-                    'pic'      => 'Joko P.',
-                    'due_date' => '05 Agu',
-                    'status'   => 'Selesai',
-                    'badge'    => 'bg-success text-white'
-                ],
-            ]
+        return view('grievance_main');
+    }
+    public function datatable()
+    {
+        $filter = [
+
+            'site'       => $this->request->getGet('site'),
+
+            'status'     => $this->request->getGet('status'),
+
+            'department' => $this->request->getGet('department'),
+
+            'keyword'    => $this->request->getGet('search'),
+
         ];
 
-        // Melempar data ke layout utama
-        return view('layouts/layout', $data);
+        $data = $this->caseModel
+            ->getDatatable($filter)
+            ->get()
+            ->getResultArray();
+
+        return $this->response->setJSON([
+            'data' => $data
+        ]);
+    }
+    public function detail($id)
+    {
+        $case = $this->caseModel->getDetail($id);
+
+        if (!$case) {
+
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        return $this->response->setJSON($case);
+    }
+    public function dashboardSummary()
+    {
+        return $this->response->setJSON(
+
+            $this->caseModel->getDashboardSummary()
+
+        );
+    }
+    public function monthlyTrend()
+    {
+        $year = $this->request->getGet('year') ?? date('Y');
+
+        return $this->response->setJSON(
+
+            $this->caseModel->getMonthlyTrend($year)
+
+        );
+    }
+    public function overdueCases()
+    {
+        return $this->response->setJSON(
+
+            $this->caseModel->getOverdueCases()
+
+        );
+    }
+    public function store()
+    {
+        $rules = [
+
+            'site_id' => 'required',
+
+            'channel_id' => 'required',
+
+            'message_type_id' => 'required',
+
+            'case_type_id' => 'required',
+
+            'department_id' => 'required',
+
+            'priority_id' => 'required',
+
+            'message' => 'required'
+
+        ];
+
+        if (!$this->validate($rules)) {
+
+            return $this->response
+                ->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'errors' => $this->validator->getErrors()
+                ]);
+        }
+
+        $data = $this->request->getPost();
+
+        $data['case_no'] = $this->caseModel->generateCaseNumber();
+
+        $data['status_id'] = 1;
+
+        $data['created_by'] = session()->get('user_id');
+
+        $this->caseModel->insert($data);
+
+        return $this->response->setJSON([
+            'status' => true,
+            'message' => 'Case created successfully.'
+        ]);
+    }
+    public function updateStatus($id)
+    {
+        $this->caseModel->update($id, [
+
+            'status_id' => $this->request->getPost('status_id')
+
+        ]);
+
+        return $this->response->setJSON([
+            'status' => true
+        ]);
+    }
+    public function delete($id)
+    {
+        $this->caseModel->delete($id);
+
+        return $this->response->setJSON([
+            'status' => true
+        ]);
     }
 }
