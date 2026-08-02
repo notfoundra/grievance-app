@@ -124,7 +124,18 @@
                     <input type="date" value="<?= date('Y-m-d') ?>" disabled>
                     <small class="text-muted">Set automatically to today, not editable.</small>
                 </div>
+                <div class="form-group">
+                    <label>Target Response Date <span class="text-danger">*</span></label>
+                    <input type="date" id="targetResponse" name="target_response_date" class="form-control" required>
+                </div>
 
+                <div class="form-group">
+                    <label>Target Closure Date <span class="text-danger">*</span></label>
+                    <input type="date" id="targetClosure" name="target_closure_date" class="form-control" required>
+                </div>
+
+            </div>
+            <div class="form-grid">
                 <div class="form-group">
                     <label>Confidential</label>
                     <div class="form-check mt-2">
@@ -142,17 +153,6 @@
                 </div>
             </div>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Target Response Date <span class="text-danger">*</span></label>
-                    <input type="date" id="targetResponse" name="target_response_date" class="form-control" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Target Closure Date <span class="text-danger">*</span></label>
-                    <input type="date" id="targetClosure" name="target_closure_date" class="form-control" required>
-                </div>
-            </div>
 
         </div>
     </div>

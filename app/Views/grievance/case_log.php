@@ -40,21 +40,6 @@
 
         <div class="toolbar-right">
 
-            <select id="filterSite">
-
-                <option value="">All Sites</option>
-
-                <?php foreach ($sites as $row): ?>
-
-                    <option value="<?= $row['id'] ?>">
-
-                        <?= esc($row['name']) ?>
-
-                    </option>
-
-                <?php endforeach; ?>
-
-            </select>
 
             <select id="filterDepartment">
 
@@ -150,7 +135,7 @@
 
                 <th>Department</th>
 
-                <th>Case Type</th>
+                <th>Message</th>
 
                 <th width="100">Priority</th>
 

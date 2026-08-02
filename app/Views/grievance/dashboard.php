@@ -1,26 +1,6 @@
 <div class="filterbar card">
 
-    <div class="field">
 
-        <label>Site</label>
-
-        <select id="dashSite">
-
-            <option value="">All Sites</option>
-
-            <?php foreach ($sites as $site): ?>
-
-                <option value="<?= $site['id'] ?>">
-
-                    <?= esc($site['name']) ?>
-
-                </option>
-
-            <?php endforeach; ?>
-
-        </select>
-
-    </div>
 
     <div class="field">
 

@@ -47,8 +47,23 @@ const CaseLog = {
                 },
 
                 {
-                    data: "case_type"
-                },
+    data: "message",
+    render: function (data, type) {
+
+        if (type === "display") {
+
+            if (!data) return "-";
+
+            const shortText = data.length > 50
+                ? data.substring(0, 50) + "..."
+                : data;
+
+            return `<span title="${data.replace(/"/g, '&quot;')}">${shortText}</span>`;
+        }
+
+        return data;
+    }
+},
 
               {
     data: "priority",

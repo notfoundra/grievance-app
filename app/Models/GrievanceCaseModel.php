@@ -79,6 +79,7 @@ class GrievanceCaseModel extends BaseModel
         gc.received_date,
         gc.target_closure_date,
         gc.pic,
+        gc.message,
         md.name AS department,
         mc.name AS case_type,
         mp.name AS priority,
