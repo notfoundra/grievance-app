@@ -1,88 +1,31 @@
 <header class="topbar">
 
     <div class="top-left">
-
-        <button
-            id="btnSidebar"
-            class="icon-btn">
-
+        <button id="btnSidebar" class="icon-btn d-md-none">
             <i class="bi bi-list"></i>
-
         </button>
-
         <div>
-
-            <h2 id="pageTitle">
-
-                Dashboard
-
-            </h2>
-
-            <small>
-
-                Home /
-                <span id="breadcrumb">
-
-                    Dashboard
-
-                </span>
-
-            </small>
-
+            <h2 id="pageTitle"><?= $title ?? 'Dashboard' ?></h2>
+            <small>Home / <span id="breadcrumb"><?= $title ?? 'Dashboard' ?></span></small>
         </div>
-
     </div>
 
     <div class="top-right">
 
-        <div class="search-box">
-
-            <i class="bi bi-search"></i>
-
-            <input
-                type="text"
-                placeholder="Search...">
-
-        </div>
-
         <button class="icon-btn">
-
             <i class="bi bi-bell"></i>
-
-            <span class="notif-dot">
-
-                3
-
-            </span>
-
+            <span class="notif-dot">3</span>
         </button>
 
         <div class="profile">
-
-            <div class="avatar">
-
-                N
-
-            </div>
-
+            <div class="avatar"><?= esc(strtoupper(substr(current_user()['name'] ?? 'U', 0, 1))) ?></div>
             <div>
-
-                <strong>
-
-                    Administrator
-
-                </strong>
-
-                <small>
-
-                    HR Admin
-
-                </small>
-
+                <strong><?= esc(current_user()['name'] ?? '') ?></strong>
+                <small><?= esc(ucfirst(current_user()['role'] ?? '')) ?></small>
             </div>
-
-            <i class="bi bi-chevron-down"></i>
-
+            <a href="<?= site_url('logout') ?>" class="icon-btn" title="Logout" style="margin-left:.4rem">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
         </div>
 
     </div>

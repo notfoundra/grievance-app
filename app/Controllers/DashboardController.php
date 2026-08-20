@@ -17,20 +17,16 @@ class DashboardController extends BaseController
     public function summary()
     {
         $filter = [
-
-            'site_id'       => $this->request->getGet('site_id'),
+            'site_id'       => scoped_site_id($this->request->getGet('site_id')),
             'year'          => $this->request->getGet('year'),
             'month'         => $this->request->getGet('month'),
             'department_id' => $this->request->getGet('department_id'),
             'status_id'     => $this->request->getGet('status_id'),
             'case_type_id'  => $this->request->getGet('case_type_id'),
-
         ];
 
         return $this->response->setJSON(
-
             $this->caseModel->getDashboardSummary($filter)
-
         );
     }
 }

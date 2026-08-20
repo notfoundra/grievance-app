@@ -247,3 +247,287 @@ const NewCase = {
 };
 
 $(document).ready(() => NewCase.init());
+(function () {
+
+    if (window.__newCaseJsLoaded) return;
+    window.__newCaseJsLoaded = true;
+
+    const form       = document.getElementById('formCase');
+    const tabs       = document.querySelectorAll('.wizard-tab');
+    const panes      = document.querySelectorAll('.tab-pane');
+    const dropArea   = document.getElementById('dropArea');
+    const fileInput  = document.getElementById('attachment');
+    const previewBox = document.getElementById('previewFiles');
+
+    let selectedFiles = [];
+    let currentStep   = 1;
+
+    const MAX_SIZE = 5 * 1024 * 1024;
+    const ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
+
+    // ---------- Tab navigation ----------
+    function goToStep(step) {
+        panes.forEach(p => p.classList.toggle('active', p.dataset.pane == step));
+
+        tabs.forEach(t => {
+            const s = Number(t.dataset.step);
+            t.classList.toggle('active', s === step);
+            t.classList.toggle('done', s < step);
+        });
+
+        currentStep = step;
+        window.scrollTo({ top: form.offsetTop - 20, behavior: 'smooth' });
+
+        if (step === 4) buildReview();
+    }
+
+    function clearErrors(pane) {
+        pane.querySelectorAll('.form-group.has-error').forEach(g => g.classList.remove('has-error'));
+    }
+
+    function markError(input) {
+        const group = input.closest('.form-group');
+        if (group) group.classList.add('has-error');
+    }
+
+    function validateStep(step) {
+        const pane = document.querySelector(`.tab-pane[data-pane="${step}"]`);
+        clearErrors(pane);
+
+        let valid = true;
+
+        if (step === 1) {
+            const site = form.querySelector('[name="site_id"]');
+            if (site && site.hasAttribute('required') && ! site.value) {
+                markError(site);
+                valid = false;
+            }
+        }
+
+        if (step === 2) {
+            const message = form.querySelector('[name="message"]');
+            if (message.value.trim().length < 10) {
+                markError(message);
+                valid = false;
+            }
+
+            const targetResponse = document.getElementById('targetResponse');
+            const targetClosure  = document.getElementById('targetClosure');
+
+            if (! targetResponse.value) {
+                markError(targetResponse);
+                valid = false;
+            }
+
+            if (! targetClosure.value) {
+                markError(targetClosure);
+                valid = false;
+            } else if (targetResponse.value && targetClosure.value < targetResponse.value) {
+                markError(targetClosure);
+                valid = false;
+            }
+        }
+
+        return valid;
+    }
+
+    document.querySelectorAll('.btn-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (validateStep(currentStep)) {
+                goToStep(Number(btn.dataset.next));
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-prev').forEach(btn => {
+        btn.addEventListener('click', () => goToStep(Number(btn.dataset.prev)));
+    });
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = Number(tab.dataset.step);
+            if (target <= currentStep) {
+                goToStep(target); // boleh mundur bebas
+            } else if (validateStep(currentStep)) {
+                goToStep(target); // maju harus valid dulu
+            }
+        });
+    });
+
+    // ---------- File upload ----------
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function renderFiles() {
+        if (! selectedFiles.length) {
+            previewBox.innerHTML = '';
+            return;
+        }
+
+        previewBox.innerHTML = selectedFiles.map((f, i) => `
+            <div class="file-chip">
+                <i class="bi bi-file-earmark"></i>
+                <span class="name">${f.name}</span>
+                <span class="size">${formatSize(f.size)}</span>
+                <button type="button" class="remove" data-index="${i}"><i class="bi bi-x-circle"></i></button>
+            </div>
+        `).join('');
+
+        previewBox.querySelectorAll('.remove').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedFiles.splice(Number(btn.dataset.index), 1);
+                syncFileInput();
+                renderFiles();
+            });
+        });
+    }
+
+    function syncFileInput() {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(f => dt.items.add(f));
+        fileInput.files = dt.files;
+    }
+
+    function addFiles(fileList) {
+        const errors = [];
+
+        Array.from(fileList).forEach(file => {
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (! ALLOWED_EXT.includes(ext)) {
+                errors.push(`${file.name}: tipe file tidak diizinkan.`);
+                return;
+            }
+
+            if (file.size > MAX_SIZE) {
+                errors.push(`${file.name}: ukuran melebihi 5 MB.`);
+                return;
+            }
+
+            selectedFiles.push(file);
+        });
+
+        if (errors.length) {
+            Swal.fire({ icon: 'warning', title: 'Beberapa file ditolak', html: errors.join('<br>') });
+        }
+
+        syncFileInput();
+        renderFiles();
+    }
+
+    dropArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropArea.addEventListener(evt, e => {
+            e.preventDefault();
+            dropArea.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+        dropArea.addEventListener(evt, e => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+        });
+    });
+
+    dropArea.addEventListener('drop', e => {
+        e.preventDefault();
+        addFiles(e.dataTransfer.files);
+    });
+
+    // ---------- Review ----------
+    function labelOf(select) {
+        if (! select) return '-';
+        const opt = select.options[select.selectedIndex];
+        return opt && opt.value ? opt.text : '-';
+    }
+
+    function buildReview() {
+        const fd = new FormData(form);
+
+        const siteEl = form.querySelector('[name="site_id"]');
+        const siteLabel = siteEl.tagName === 'SELECT' ? labelOf(siteEl) : siteEl.closest('.form-group').querySelector('input[type="text"]').value;
+
+        const info = [
+            ['Site', siteLabel],
+            ['Department', labelOf(form.querySelector('[name="department_id"]'))],
+            ['Channel', labelOf(form.querySelector('[name="channel_id"]'))],
+            ['Message Type', labelOf(form.querySelector('[name="message_type_id"]'))],
+            ['Case Type', labelOf(form.querySelector('[name="case_type_id"]'))],
+            ['Priority', labelOf(form.querySelector('[name="priority_id"]'))],
+            ['Target Response', document.getElementById('targetResponse').value || '-'],
+            ['Target Closure', document.getElementById('targetClosure').value || '-'],
+            ['Confidential', document.getElementById('confidential').checked ? 'Yes' : 'No'],
+            ['Repeated Case', document.getElementById('repeat').checked ? 'Yes' : 'No'],
+        ];
+
+        document.getElementById('reviewInfo').innerHTML = info.map(([k, v]) => `
+            <div class="review-item">
+                <small>${k}</small>
+                <strong>${v}</strong>
+            </div>
+        `).join('');
+
+        document.getElementById('reviewMessage').textContent = fd.get('message') || '-';
+
+        document.getElementById('reviewAttachments').innerHTML = selectedFiles.length
+            ? selectedFiles.map(f => `<div><i class="bi bi-paperclip"></i> ${f.name} (${formatSize(f.size)})</div>`).join('')
+            : 'No files attached.';
+    }
+
+    // ---------- Submit ----------
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        if (! validateStep(1) || ! validateStep(2)) {
+            Swal.fire({ icon: 'warning', title: 'Data belum lengkap', text: 'Periksa kembali Step 1 & 2.' });
+            return;
+        }
+
+        const submitBtn = document.getElementById('btnSubmit');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting...';
+
+        const formData = new FormData(form);
+
+        fetch(`${APP.baseUrl}case/store`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Case berhasil dibuat',
+                        text: `Case number: ${data.case_number || ''}`,
+                        confirmButtonText: 'OK',
+                    }).then(() => {
+                        window.location.href = `${APP.baseUrl}case/case-detail/${data.id}`;
+                    });
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-send"></i> Submit Case';
+
+                    const errors = data.errors
+                        ? Object.values(data.errors).flat().join('<br>')
+                        : 'Terjadi kesalahan. Silakan coba lagi.';
+
+                    Swal.fire({ icon: 'error', title: 'Gagal menyimpan case', html: errors });
+                }
+            })
+            .catch(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-send"></i> Submit Case';
+                Swal.fire({ icon: 'error', title: 'Gagal terhubung ke server', text: 'Silakan coba lagi.' });
+            });
+    });
+
+})();

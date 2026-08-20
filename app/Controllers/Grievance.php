@@ -28,20 +28,22 @@ class Grievance extends BaseController
 
     public function index()
     {
-        $siteModel       = new MasterSiteModel();
-        $deptModel       = new MasterDepartmentModel();
-        $caseTypeModel   = new MasterCaseTypeModel();
-        $statusModel     = new MasterStatusModel();
+        $siteModel     = new MasterSiteModel();
+        $deptModel     = new MasterDepartmentModel();
+        $caseTypeModel = new MasterCaseTypeModel();
+        $statusModel   = new MasterStatusModel();
+
+        $sites = $siteModel->where('is_active', 1)->findAll();
+
+        if (! has_role(\App\Models\UserModel::ROLE_ADMIN)) {
+            $sites = array_values(array_filter($sites, fn($s) => (int) $s['id'] === (int) current_user()['site_id']));
+        }
+
         $data = [
-
-            'sites'       => $siteModel->where('is_active', 1)->findAll(),
-
+            'sites'       => $sites,
             'departments' => $deptModel->where('is_active', 1)->orderBy('name')->findAll(),
-
             'caseTypes'   => $caseTypeModel->where('is_active', 1)->orderBy('name')->findAll(),
-
-            'statuses'    => $statusModel->where('is_active', 1)->orderBy('sort_order')->findAll()
-
+            'statuses'    => $statusModel->where('is_active', 1)->orderBy('sort_order')->findAll(),
         ];
 
         return view('grievance/index', $data);
@@ -72,5 +74,42 @@ class Grievance extends BaseController
 
 
         return view('grievance/case_log', $data);
+    }
+    public function followUp()
+    {
+        $siteModel = new MasterSiteModel();
+        $sites = $siteModel->where('is_active', 1)->findAll();
+
+        if (! has_role(\App\Models\UserModel::ROLE_ADMIN)) {
+            $sites = array_values(array_filter(
+                $sites,
+                fn($s) => (int) $s['id'] === (int) current_user()['site_id']
+            ));
+        }
+
+        $data = [
+            'sites'       => $sites,
+            'departments' => (new MasterDepartmentModel())->where('is_active', 1)->orderBy('name')->findAll(),
+            'caseTypes'   => (new MasterCaseTypeModel())->where('is_active', 1)->orderBy('name')->findAll(),
+            'priorities'  => (new MasterPriorityModel())->where('is_active', 1)->findAll(),
+        ];
+
+        return view('grievance/follow_up', $data);
+    }
+
+    public function followUpData()
+    {
+        $filter = [
+            'site_id'        => scoped_site_id($this->request->getGet('site_id')),
+            'year'           => $this->request->getGet('year') ?: date('Y'),
+            'department_id'  => $this->request->getGet('department_id'),
+            'case_type_id'   => $this->request->getGet('case_type_id'),
+            'priority_id'    => $this->request->getGet('priority_id'),
+            'include_closed' => $this->request->getGet('include_closed'),
+        ];
+
+        return $this->response->setJSON(
+            $this->caseModel->getFollowUpBoard($filter)
+        );
     }
 }

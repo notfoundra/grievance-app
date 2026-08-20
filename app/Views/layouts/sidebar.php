@@ -1,104 +1,47 @@
 <?php
 
-$current = service('uri')->getSegment(2);
+$path     = trim(service('request')->getUri()->getPath(), '/');
+$segments = $path === '' ? [] : explode('/', $path);
+$current  = $segments[1] ?? '';
+
+$user = current_user();
+
+$menus = [
+    ['segment' => '',          'url' => 'grievance',            'icon' => 'bi-speedometer2',   'label' => 'Dashboard',   'roles' => ['admin', 'socks', 'garmen']],
+    ['segment' => 'case-log',  'url' => 'grievance/case-log',   'icon' => 'bi-journal-text',   'label' => 'Case Log',    'roles' => ['admin', 'socks', 'garmen']],
+    ['segment' => 'new',       'url' => 'case/new',             'icon' => 'bi-plus-circle',    'label' => 'New Case',    'roles' => ['admin', 'socks', 'garmen']],
+    ['segment' => 'follow-up', 'url' => 'grievance/follow-up',  'icon' => 'bi-chat-left-text', 'label' => 'Follow Up',   'roles' => ['admin', 'socks', 'garmen']],
+    ['segment' => 'reports',   'url' => 'grievance/reports',    'icon' => 'bi-bar-chart',      'label' => 'Reports',     'roles' => ['admin']],
+    ['segment' => 'master-data', 'url' => 'grievance/master-data', 'icon' => 'bi-database',    'label' => 'Master Data', 'roles' => ['admin']],
+    ['segment' => 'users',     'url' => 'grievance/users',      'icon' => 'bi-people',         'label' => 'Users',       'roles' => ['admin']],
+    ['segment' => 'settings',  'url' => 'grievance/settings',   'icon' => 'bi-gear',           'label' => 'Settings',    'roles' => ['admin']],
+];
 
 ?>
 
 <aside class="sidebar" id="sidebar">
 
     <div class="brand">
-
-        <div class="brand-logo">
-
-            <img
-                src="<?= base_url('assets/logo2.png') ?>"
-                alt="PT Kahatex">
-
-        </div>
-
+        <img src="<?= base_url('assets/logo1.png') ?>" alt="PT Kahatex">
         <div class="brand-text">
-
             <h3>PT KAHATEX</h3>
-
-            <small>Grievance Management System</small>
-
+            <small>Grievance Management</small>
         </div>
-
     </div>
 
     <nav class="sidebar-menu">
 
-        <a href="<?= site_url('grievance') ?>"
-            class="menu <?= ($current == '' || $current == null) ? 'active' : '' ?>">
+        <?php foreach ($menus as $item) : ?>
 
-            <i class="bi bi-speedometer2"></i>
+            <?php if (! in_array($user['role'] ?? '', $item['roles'], true)) continue; ?>
 
-            <span>Dashboard</span>
+            <a href="<?= site_url($item['url']) ?>"
+                class="menu <?= $current == $item['segment'] ? 'active' : '' ?>">
+                <i class="bi <?= $item['icon'] ?>"></i>
+                <span><?= esc($item['label']) ?></span>
+            </a>
 
-        </a>
-
-        <a href="<?= site_url('grievance/case-log') ?>"
-            class="menu <?= ($current == 'case-log') ? 'active' : '' ?>">
-
-            <i class="bi bi-journal-text"></i>
-
-            <span>Case Log</span>
-
-        </a>
-
-        <a href="<?= site_url('case/new') ?>"
-            class="menu <?= ($current == 'new') ? 'active' : '' ?>">
-
-            <i class="bi bi-plus-circle"></i>
-
-            <span>New Case</span>
-
-        </a>
-
-        <a href="<?= site_url('grievance/follow-up') ?>"
-            class="menu <?= ($current == 'follow-up') ? 'active' : '' ?>">
-
-            <i class="bi bi-chat-left-text"></i>
-
-            <span>Follow Up</span>
-
-        </a>
-
-        <a href="<?= site_url('grievance/reports') ?>"
-            class="menu <?= ($current == 'reports') ? 'active' : '' ?>">
-
-            <i class="bi bi-bar-chart"></i>
-
-            <span>Reports</span>
-
-        </a>
-
-        <a href="<?= site_url('grievance/master-data') ?>"
-            class="menu <?= ($current == 'master-data') ? 'active' : '' ?>">
-
-            <i class="bi bi-database"></i>
-
-            <span>Master Data</span>
-
-        </a>
-
-        <a href="<?= site_url('grievance/users') ?>"
-            class="menu <?= ($current == 'users') ? 'active' : '' ?>">
-
-            <i class="bi bi-people"></i>
-
-            <span>Users</span>
-
-        </a>
-
-        <a href="<?= site_url('grievance/settings') ?>"
-            class="menu <?= ($current == 'settings') ? 'active' : '' ?>">
-
-            <i class="bi bi-gear"></i>
-
-            <span>Settings</span>
-
-        </a>
+        <?php endforeach; ?>
 
     </nav>
 

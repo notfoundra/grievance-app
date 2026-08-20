@@ -14,12 +14,14 @@ class GrievanceCaseModel extends BaseModel
 
     protected $allowedFields = [
         'case_number',
+        'source',
+        'external_id',
         'site_id',
         'channel_id',
         'message_type_id',
         'case_type_id',
         'department_id',
-        'pic_id',
+        'pic',
         'priority_id',
         'status_id',
         'received_date',
@@ -69,28 +71,26 @@ class GrievanceCaseModel extends BaseModel
 
             ->join('master_statuses', 'master_statuses.id = grievance_cases.status_id', 'left');
     }
-    public function getDatatable()
+    public function getDatatable(?int $siteId = null)
     {
-        return $this->db
+        $builder = $this->db
             ->table('grievance_cases gc')
             ->select('
-        gc.id,
-        gc.case_number,
-        gc.received_date,
-        gc.target_closure_date,
-        gc.pic,
-        gc.message,
-        md.name AS department,
-        mc.name AS case_type,
-        mp.name AS priority,
-        ms.name AS status
+        gc.id, gc.case_number, gc.received_date, gc.target_closure_date,
+        gc.pic, gc.message, gc.site_id,
+        md.name AS department, mc.name AS case_type,
+        mp.name AS priority, ms.name AS status
     ')
             ->join('master_departments md', 'md.id=gc.department_id', 'left')
             ->join('master_case_types mc', 'mc.id=gc.case_type_id', 'left')
             ->join('master_priorities mp', 'mp.id=gc.priority_id', 'left')
-            ->join('master_statuses ms', 'ms.id=gc.status_id', 'left')
-            ->get()
-            ->getResultArray();
+            ->join('master_statuses ms', 'ms.id=gc.status_id', 'left');
+
+        if ($siteId) {
+            $builder->where('gc.site_id', $siteId);
+        }
+
+        return $builder->get()->getResultArray();
     }
     public function getDetail($id)
     {
@@ -190,7 +190,7 @@ class GrievanceCaseModel extends BaseModel
                 ->where('target_closure_date <', date('Y-m-d'))
                 ->countAllResults(),
 
-            'response' => '0 Day'
+            'response' => $this->getAvgResponseDays($filter),
 
         ];
 
@@ -319,6 +319,7 @@ class GrievanceCaseModel extends BaseModel
 
         $builder = $db->table('grievance_cases gc')
             ->select('
+              gc.id,
             gc.case_number,
             md.name AS department,
             mc.name AS case_type,
@@ -418,11 +419,11 @@ class GrievanceCaseModel extends BaseModel
 
         ];
     }
-    public function createCase($request)
+    public function createCase($request, ?int $forcedSiteId = null)
     {
         $data = [
             'case_number'         => $this->generateCaseNumber(),
-            'site_id'              => $request->getPost('site_id'),
+            'site_id'     => $forcedSiteId ?: $request->getPost('site_id'),
             'department_id'        => $request->getPost('department_id'),
             'channel_id'           => $request->getPost('channel_id'),
             'message_type_id'      => $request->getPost('message_type_id'),
@@ -506,5 +507,88 @@ class GrievanceCaseModel extends BaseModel
             $year,
             $number
         );
+    }
+    private function getAvgResponseDays(array $filter): string
+    {
+        $db = db_connect();
+
+        $builder = $this->applyFilter($db->table($this->table), $filter)
+            ->where('response_date IS NOT NULL', null, false);
+
+        $rows = $builder
+            ->select('AVG(DATEDIFF(response_date, received_date)) avg_days')
+            ->get()
+            ->getRowArray();
+
+        $avg = $rows['avg_days'] ?? null;
+
+        return $avg !== null ? round((float) $avg, 1) . ' Day' : '0 Day';
+    }
+    public function getFollowUpBoard(array $filter = []): array
+    {
+        $db = db_connect();
+
+        $builder = $db->table('grievance_cases gc')
+            ->select("
+            gc.id, gc.case_number, LEFT(gc.message, 160) AS message,
+            gc.pic, gc.target_closure_date,
+            md.name AS department, mc.name AS case_type,
+            mp.name AS priority, ms.name AS status
+        ")
+            ->join('master_departments md', 'md.id = gc.department_id', 'left')
+            ->join('master_case_types mc', 'mc.id = gc.case_type_id', 'left')
+            ->join('master_priorities mp', 'mp.id = gc.priority_id', 'left')
+            ->join('master_statuses ms', 'ms.id = gc.status_id', 'left');
+
+        if (! empty($filter['site_id'])) {
+            $builder->where('gc.site_id', $filter['site_id']);
+        }
+
+        if (! empty($filter['year'])) {
+            $builder->where('YEAR(gc.received_date)', $filter['year']);
+        }
+
+        if (! empty($filter['department_id'])) {
+            $builder->where('gc.department_id', $filter['department_id']);
+        }
+
+        if (! empty($filter['case_type_id'])) {
+            $builder->where('gc.case_type_id', $filter['case_type_id']);
+        }
+
+        if (! empty($filter['priority_id'])) {
+            $builder->where('gc.priority_id', $filter['priority_id']);
+        }
+
+        if (empty($filter['include_closed'])) {
+            $builder->where('ms.name !=', 'Closed');
+        }
+
+        $rows = $builder
+            ->orderBy('gc.target_closure_date', 'ASC')
+            ->limit(500)
+            ->get()
+            ->getResultArray();
+
+        $board = ['Open' => [], 'In Progress' => [], 'Overdue' => [], 'Closed' => []];
+        $today = date('Y-m-d');
+
+        foreach ($rows as $row) {
+            $bucket = $row['status'] ?? 'Open';
+
+            // Case yang masih aktif (belum Closed) tapi target closure-nya udah lewat
+            // otomatis dipindah tampil ke kolom Overdue, walau status_id di DB belum diubah.
+            if ($bucket !== 'Closed' && ! empty($row['target_closure_date']) && $row['target_closure_date'] < $today) {
+                $bucket = 'Overdue';
+            }
+
+            if (! isset($board[$bucket])) {
+                $board[$bucket] = [];
+            }
+
+            $board[$bucket][] = $row;
+        }
+
+        return $board;
     }
 }

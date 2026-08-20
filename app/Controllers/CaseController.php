@@ -4,13 +4,14 @@ namespace App\Controllers;
 
 use App\Models\GrievanceAttachmentModel;
 use App\Models\GrievanceCaseModel;
+use App\Models\GrievanceUpdateModel;
 use App\Models\MasterSiteModel;
 use App\Models\MasterDepartmentModel;
 use App\Models\MasterChannelModel;
 use App\Models\MasterPriorityModel;
 use App\Models\MasterCaseTypeModel;
 use App\Models\MasterMessageTypeModel;
-use App\Models\GrievanceUpdateModel;
+use App\Models\MasterStatusModel;
 
 class CaseController extends BaseController
 {
@@ -24,42 +25,86 @@ class CaseController extends BaseController
     public function ajaxList()
     {
         return $this->response->setJSON(
-
-            $this->caseModel->getDatatable()
-
+            $this->caseModel->getDatatable(scoped_site_id())
         );
     }
 
     public function caseDetail($id)
     {
-        $data['case'] = $this->caseModel->getDetail($id);
+        $case = $this->caseModel->getDetail($id);
 
-        if (!$data['case']) {
+        if (! $case || ! user_owns_site($case['site_id'])) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
+        $attachmentModel = new GrievanceAttachmentModel();
+        $updateModel     = new GrievanceUpdateModel();
+
+        $allAttachments = $attachmentModel->forCase((int) $id);
+
+        // Attachment yang menempel di case (bukan follow-up tertentu)
+        $caseAttachments = array_values(array_filter($allAttachments, fn($a) => $a['update_id'] === null));
+
+        // Attachment per follow-up, dikelompokkan by update_id
+        $attachmentsByUpdate = [];
+        foreach ($allAttachments as $a) {
+            if ($a['update_id'] !== null) {
+                $attachmentsByUpdate[$a['update_id']][] = $a;
+            }
+        }
+
+        $updates = $updateModel
+            ->where('case_id', $id)
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+
+        // Tempelkan nama status & attachment ke tiap update, biar view tinggal pakai
+        $statusModel = new MasterStatusModel();
+        $statuses    = $statusModel->findAll();
+        $statusMap   = array_column($statuses, 'name', 'id');
+
+        foreach ($updates as &$u) {
+            $u['status_name']  = $statusMap[$u['status_id']] ?? '-';
+            $u['attachments']  = $attachmentsByUpdate[$u['id']] ?? [];
+        }
+        unset($u);
+
+        $data = [
+            'case'              => $case,
+            'caseAttachments'   => $caseAttachments,
+            'updates'           => $updates,
+            'departments'       => (new MasterDepartmentModel())->where('is_active', 1)->orderBy('name')->findAll(),
+            'priorities'        => (new MasterPriorityModel())->where('is_active', 1)->findAll(),
+            'statuses'          => $statuses,
+        ];
+
         return view('grievance/case_detail', $data);
     }
+
     public function newCase()
     {
+        $siteModel = new MasterSiteModel();
+        $sites = $siteModel->where('is_active', 1)->findAll();
+
+        if (! has_role(\App\Models\UserModel::ROLE_ADMIN)) {
+            $sites = array_values(array_filter(
+                $sites,
+                fn($s) => (int) $s['id'] === (int) current_user()['site_id']
+            ));
+        }
+
         $data = [
-
-            'sites' => (new MasterSiteModel())->findAll(),
-
-            'departments' => (new MasterDepartmentModel())->findAll(),
-
-            'channels' => (new MasterChannelModel())->findAll(),
-
-            'priorities' => (new MasterPriorityModel())->findAll(),
-
-            'caseTypes' => (new MasterCaseTypeModel())->findAll(),
-
-            'messageTypes' => (new MasterMessageTypeModel())->findAll(),
-
+            'sites'        => $sites,
+            'departments'  => (new MasterDepartmentModel())->where('is_active', 1)->findAll(),
+            'channels'     => (new MasterChannelModel())->where('is_active', 1)->findAll(),
+            'priorities'   => (new MasterPriorityModel())->where('is_active', 1)->findAll(),
+            'caseTypes'    => (new MasterCaseTypeModel())->where('is_active', 1)->findAll(),
+            'messageTypes' => (new MasterMessageTypeModel())->where('is_active', 1)->findAll(),
         ];
 
         return view('grievance/new_case', $data);
     }
+
     public function store()
     {
         $model = new GrievanceCaseModel();
@@ -93,8 +138,6 @@ class CaseController extends BaseController
             ]);
         }
 
-        // Validate files BEFORE creating the case, so a bad attachment
-        // never leaves an orphaned case behind.
         $files      = $this->request->getFileMultiple('attachment') ?? [];
         $fileErrors = $this->validateAttachments($files);
 
@@ -105,26 +148,158 @@ class CaseController extends BaseController
             ]);
         }
 
-        $id = $model->createCase($this->request);
+        $forcedSiteId = has_role(\App\Models\UserModel::ROLE_ADMIN) ? null : current_user()['site_id'];
+
+        $id = $model->createCase($this->request, $forcedSiteId);
 
         $this->storeAttachments($id, $files);
 
+        $case = $model->find($id);
+
+        return $this->response->setJSON([
+            'status'      => true,
+            'message'     => 'Case created successfully.',
+            'id'          => $id,
+            'case_number' => $case['case_number'] ?? null,
+        ]);
+    }
+
+    /**
+     * Edit data administratif case (bukan status — status ganti lewat addUpdate()).
+     */
+    public function update($id)
+    {
+        $case = $this->caseModel->find($id);
+
+        if (! $case || ! user_owns_site($case['site_id'])) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $rules = [
+            'department_id'         => 'required|integer',
+            'priority_id'           => 'required|integer',
+            'target_response_date'  => 'required|valid_date',
+            'target_closure_date'   => 'required|valid_date',
+            'rating'                => 'permit_empty|integer|greater_than[0]|less_than[6]',
+        ];
+
+        if (! $this->validate($rules)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => false,
+                'errors' => $this->validator->getErrors(),
+            ]);
+        }
+
+        $targetResponse = $this->request->getPost('target_response_date');
+        $targetClosure  = $this->request->getPost('target_closure_date');
+
+        if (strtotime($targetClosure) < strtotime($targetResponse)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => false,
+                'errors' => ['target_closure_date' => 'Target closure date cannot be earlier than target response date.'],
+            ]);
+        }
+
+        $data = [
+            'department_id'        => $this->request->getPost('department_id'),
+            'priority_id'          => $this->request->getPost('priority_id'),
+            'pic'                  => $this->request->getPost('pic'),
+            'target_response_date' => $targetResponse,
+            'target_closure_date'  => $targetClosure,
+            'root_cause'           => $this->request->getPost('root_cause'),
+            'corrective_action'    => $this->request->getPost('corrective_action'),
+            'management_response'  => $this->request->getPost('management_response'),
+            'confidential'         => $this->request->getPost('confidential') ? 'Yes' : 'No',
+            'repeated_case'        => $this->request->getPost('repeated_case') ? 'Yes' : 'No',
+            'rating'               => $this->request->getPost('rating') ?: null,
+            'satisfaction'         => $this->request->getPost('satisfaction') ?: null,
+        ];
+
+        $this->caseModel->update($id, $data);
+
         return $this->response->setJSON([
             'status'  => true,
-            'message' => 'Case created successfully.',
-            'id'      => $id,
+            'message' => 'Case updated successfully.',
+        ]);
+    }
+
+    /**
+     * Tambah entri follow-up: ganti status + catatan wajib + lampiran opsional.
+     * Ini yang jadi sumber timeline case.
+     */
+    public function addUpdate($id)
+    {
+        $case = $this->caseModel->find($id);
+
+        if (! $case || ! user_owns_site($case['site_id'])) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $rules = [
+            'status_id' => 'required|integer',
+            'note'      => 'required|min_length[5]',
+        ];
+
+        if (! $this->validate($rules)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => false,
+                'errors' => $this->validator->getErrors(),
+            ]);
+        }
+
+        $files      = $this->request->getFileMultiple('attachment') ?? [];
+        $fileErrors = $this->validateAttachments($files);
+
+        if (! empty($fileErrors)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => false,
+                'errors' => ['attachment' => $fileErrors],
+            ]);
+        }
+
+        $updateModel = new GrievanceUpdateModel();
+
+        $updateId = $updateModel->insert([
+            'case_id'    => $id,
+            'status_id'  => $this->request->getPost('status_id'),
+            'note'       => $this->request->getPost('note'),
+            'updated_by' => current_user()['name'] ?? 'System',
+        ], true);
+
+        $this->storeAttachments((int) $id, $files, (int) $updateId);
+
+        // Sinkronkan status_id case + isi response_date/closed_date otomatis
+        $newStatusId  = (int) $this->request->getPost('status_id');
+        $statusModel  = new MasterStatusModel();
+        $statusName   = $statusModel->find($newStatusId)['name'] ?? '';
+
+        $caseData = ['status_id' => $newStatusId];
+
+        if (empty($case['response_date']) && strtolower($statusName) !== 'open') {
+            $caseData['response_date'] = date('Y-m-d');
+        }
+
+        if (strtolower($statusName) === 'closed' && empty($case['closed_date'])) {
+            $caseData['closed_date'] = date('Y-m-d');
+        }
+
+        $this->caseModel->update($id, $caseData);
+
+        return $this->response->setJSON([
+            'status'  => true,
+            'message' => 'Follow up added successfully.',
         ]);
     }
 
     private function validateAttachments(array $files): array
     {
         $allowedExt = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
-        $maxSize    = 5 * 1024 * 1024; // 5 MB
+        $maxSize    = 5 * 1024 * 1024;
         $errors     = [];
 
         foreach ($files as $file) {
             if (! $file->isValid()) {
-                continue; // empty slot, nothing was actually attached
+                continue;
             }
 
             $ext = strtolower($file->getClientExtension());
@@ -141,7 +316,7 @@ class CaseController extends BaseController
         return $errors;
     }
 
-    private function storeAttachments(int $caseId, array $files): void
+    private function storeAttachments(int $caseId, array $files, ?int $updateId = null): void
     {
         if (empty($files)) {
             return;
@@ -164,7 +339,7 @@ class CaseController extends BaseController
 
             $attachmentModel->insert([
                 'case_id'       => $caseId,
-                'update_id'     => null,
+                'update_id'     => $updateId,
                 'original_name' => $file->getClientName(),
                 'stored_name'   => $storedName,
                 'file_path'     => 'uploads/grievance/' . $caseId . '/' . $storedName,
@@ -175,12 +350,17 @@ class CaseController extends BaseController
         }
     }
 
-    // Serves the file only through this controller — never expose writable/ publicly.
     public function downloadAttachment($attachmentId)
     {
         $attachment = (new GrievanceAttachmentModel())->find($attachmentId);
 
         if (! $attachment || ! is_file(WRITEPATH . $attachment['file_path'])) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $case = $this->caseModel->find($attachment['case_id']);
+
+        if (! $case || ! user_owns_site($case['site_id'])) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
