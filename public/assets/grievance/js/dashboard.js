@@ -1,518 +1,7 @@
-const Dashboard = {
-
-    chart: {
-        trend: null,
-        department: null,
-        caseType: null,
-        satisfaction: null
-    },
-
-    init() {
-
-        this.bindEvent();
-        this.load();
-
-    },
-
-    getFilter() {
-
-        return {
-
-            site_id: document.getElementById('dashSite')?.value || '',
-            year: document.getElementById('dashYear')?.value || '',
-            month: document.getElementById('dashMonth')?.value || '',
-            department_id: document.getElementById('dashDept')?.value || '',
-            status_id: document.getElementById('dashStatus')?.value || '',
-            case_type_id: document.getElementById('dashType')?.value || ''
-
-        };
-
-    },
-
-    load() {
-
-        const params = new URLSearchParams(this.getFilter());
-
-        fetch(APP.baseUrl + 'dashboard/summary?' + params.toString())
-
-            .then(res => res.json())
-
-            .then(data => {
-
-                console.log(data);
-
-                this.renderSummary(data.summary);
-
-                this.renderTrend(data.trend);
-
-                this.renderDepartment(data.department);
-
-                this.renderCaseType(data.case_type);
-
-                if (data.satisfaction) {
-
-                    this.renderSatisfaction(data.satisfaction);
-
-                }
-
-                this.renderRecent(data.recent);
-
-                this.renderOverdue(data.overdue);
-
-            })
-
-            .catch(console.error);
-
-    },
-
-    bindEvent() {
-
-        [
-
-            'dashSite',
-            'dashYear',
-            'dashMonth',
-            'dashDept',
-            'dashStatus',
-            'dashType'
-
-        ].forEach(id => {
-
-            const el = document.getElementById(id);
-
-            if (!el) return;
-
-            el.addEventListener('change', () => {
-
-                this.load();
-
-            });
-
-        });
-
-    },
-
-    renderSummary(summary) {
-
-        const cards = [
-
-            {
-                title: 'Total Cases',
-                value: summary.total,
-                class: 'total',
-                icon: 'bi-folder2-open'
-            },
-
-            {
-                title: 'Open',
-                value: summary.open,
-                class: 'open',
-                icon: 'bi-exclamation-circle'
-            },
-
-            {
-                title: 'In Progress',
-                value: summary.progress,
-                class: 'progress',
-                icon: 'bi-arrow-repeat'
-            },
-
-            {
-                title: 'Closed',
-                value: summary.closed,
-                class: 'closed',
-                icon: 'bi-check-circle'
-            },
-
-            {
-                title: 'Overdue',
-                value: summary.overdue,
-                class: 'overdue',
-                icon: 'bi-clock-history'
-            },
-
-            {
-                title: 'Avg Response',
-                value: summary.response,
-                class: 'response',
-                icon: 'bi-stopwatch'
-            }
-
-        ];
-
-        let html = '';
-
-        cards.forEach(item => {
-
-            html += `
-            <div class="kpi ${item.class} card">
-
-                <div class="kpi-icon">
-
-                    <i class="bi ${item.icon}"></i>
-
-                </div>
-
-                <small>${item.title}</small>
-
-                <h2>${item.value}</h2>
-
-            </div>
-            `;
-
-        });
-
-        document.getElementById('kpiGrid').innerHTML = html;
-
-    },
-
-    renderTrend(data) {
-
-        const canvas = document.getElementById('trendChart');
-
-        if (!canvas) return;
-
-        if (this.chart.trend) {
-
-            this.chart.trend.destroy();
-
-        }
-
-        this.chart.trend = new Chart(canvas, {
-
-            type: 'line',
-
-            data: {
-
-                labels: [
-                    'Jan', 'Feb', 'Mar', 'Apr',
-                    'May', 'Jun', 'Jul', 'Aug',
-                    'Sep', 'Oct', 'Nov', 'Dec'
-                ],
-
-                datasets: [{
-
-                    data: data,
-
-                    fill: true,
-
-                    tension: .35,
-
-                    borderWidth: 2
-
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-
-                        display: false
-
-                    }
-
-                }
-
-            }
-
-        });
-
-    },
-
-    renderDepartment(data) {
-
-        const canvas = document.getElementById('departmentChart');
-
-        if (!canvas) return;
-
-        if (this.chart.department) {
-
-            this.chart.department.destroy();
-
-        }
-
-        this.chart.department = new Chart(canvas, {
-
-            type: 'bar',
-
-            data: {
-
-                labels: data.labels,
-
-                datasets: [{
-
-                    data: data.data
-
-                }]
-
-            },
-
-            options: {
-
-                indexAxis: 'y',
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-
-                        display: false
-
-                    }
-
-                }
-
-            }
-
-        });
-
-    },
-
-    renderCaseType(data) {
-
-        const canvas = document.getElementById('caseTypeChart');
-
-        if (!canvas) return;
-
-        if (this.chart.caseType) {
-
-            this.chart.caseType.destroy();
-
-        }
-
-        this.chart.caseType = new Chart(canvas, {
-
-            type: 'doughnut',
-
-            data: {
-
-                labels: data.labels,
-
-                datasets: [{
-
-                    data: data.data
-
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false
-
-            }
-
-        });
-
-    },
-
-    renderSatisfaction(data) {
-
-        const canvas = document.getElementById('satisfactionChart');
-
-        if (!canvas) return;
-
-        if (this.chart.satisfaction) {
-
-            this.chart.satisfaction.destroy();
-
-        }
-
-        this.chart.satisfaction = new Chart(canvas, {
-
-            type: 'bar',
-
-            data: {
-
-                labels: data.labels,
-
-                datasets: [{
-
-                    data: data.data
-
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-
-                        display: false
-
-                    }
-
-                }
-
-            }
-
-        });
-
-    },
-
-    renderRecent(data) {
-
-        const tbody = document.getElementById('recentBody');
-
-        if (!tbody) return;
-
-        let html = '';
-
-        if (!data.length) {
-
-            html = `
-            <tr>
-
-                <td colspan="6" class="text-center">
-
-                    No data
-
-                </td>
-
-            </tr>
-            `;
-
-        } else {
-
-            data.forEach(item => {
-
-                const badge = item.status
-                    .toLowerCase()
-                    .replaceAll(' ', '-');
-
-                html += `
-                <tr>
-
-                    <td>${item.case_number}</td>
-
-                    <td>${item.department}</td>
-
-                    <td>${item.case_type}</td>
-
-                    <td>
-
-                        <span class="badge badge-${badge}">
-
-                            ${item.status}
-
-                        </span>
-
-                    </td>
-
-                    <td>${item.pic ?? '-'}</td>
-
-                    <td>${item.target_closure_date}</td>
-
-                </tr>
-                `;
-
-            });
-
-        }
-
-        tbody.innerHTML = html;
-
-    },
-
-    renderOverdue(data) {
-
-        const list = document.getElementById('alertList');
-
-        if (!list) return;
-
-        let html = '';
-
-        if (!data.length) {
-
-            html = '<p class="text-center">No overdue cases</p>';
-
-        } else {
-
-            data.forEach(item => {
-
-                html += `
-
-                <div class="alert-item">
-
-                    <div>
-
-                        <strong>${item.case_number}</strong><br>
-
-                        ${item.department}
-
-                    </div>
-
-                    <span class="badge badge-overdue">
-
-                        ${item.days} Days
-
-                    </span>
-
-                </div>
-
-                `;
-
-            });
-
-        }
-
-        list.innerHTML = html;
-
-    }
-
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-
-    Dashboard.init();
-
-});
-document
-.getElementById('resetDash')
-.addEventListener('click',()=>{
-
-    [
-
-        'dashSite',
-
-        'dashYear',
-
-        'dashMonth',
-
-        'dashDept',
-
-        'dashStatus',
-
-        'dashType'
-
-    ].forEach(id=>{
-
-        document.getElementById(id).value='';
-
-    });
-
-    Dashboard.load();
-
-});
 (function () {
+
+    if (window.__dashboardJsLoaded) return;
+    window.__dashboardJsLoaded = true;
 
     const isAdmin = document.getElementById('dashSite') !== null;
 
@@ -523,12 +12,27 @@ document
         satisfaction: null,
     };
 
-    const monthLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
     const palette = ['#5e72e4', '#11cdef', '#2dce89', '#fb6340', '#f5365c', '#fbb140', '#324cdd', '#8898aa'];
+
+    function defaultDateFrom() {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 5);
+        d.setDate(1);
+        return d.toISOString().slice(0, 10);
+    }
+
+    function defaultDateTo() {
+        return new Date().toISOString().slice(0, 10);
+    }
 
     function fmtDate(s) {
         if (!s) return '-';
+        const d = new Date(s + 'T00:00:00');
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function fmtDateShort(s) {
+        if (!s) return '';
         const d = new Date(s + 'T00:00:00');
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
@@ -543,6 +47,11 @@ document
         return map[status] || 'status-open';
     }
 
+    function destroyIfExists(canvasEl) {
+        const existing = Chart.getChart(canvasEl);
+        if (existing) existing.destroy();
+    }
+
     function buildQuery() {
         const params = new URLSearchParams();
 
@@ -551,14 +60,14 @@ document
             if (site) params.set('site_id', site);
         }
 
-        const year = document.getElementById('dashYear').value;
-        const month = document.getElementById('dashMonth').value;
+        const dateFrom = document.getElementById('dashDateFrom').value;
+        const dateTo = document.getElementById('dashDateTo').value;
         const status = document.getElementById('dashStatus').value;
         const type = document.getElementById('dashType').value;
         const dept = document.getElementById('dashDept').value;
 
-        if (year) params.set('year', year);
-        if (month) params.set('month', month);
+        if (dateFrom) params.set('date_from', dateFrom);
+        if (dateTo) params.set('date_to', dateTo);
         if (status) params.set('status_id', status);
         if (type) params.set('case_type_id', type);
         if (dept) params.set('department_id', dept);
@@ -586,17 +95,17 @@ document
         `).join('');
     }
 
-    function renderTrend(trend, year) {
-        document.getElementById('trendYearLabel').textContent = year || 'This Year';
+    function renderTrend(trend, labels, dateFrom, dateTo) {
+        document.getElementById('trendYearLabel').textContent =
+            `${fmtDateShort(dateFrom)} – ${fmtDateShort(dateTo)}`;
 
-        const ctx = document.getElementById('trendChart');
+        const canvas = document.getElementById('trendChart');
+        destroyIfExists(canvas);
 
-        if (charts.trend) charts.trend.destroy();
-
-        charts.trend = new Chart(ctx, {
+        new Chart(canvas, {
             type: 'line',
             data: {
-                labels: monthLabels,
+                labels: labels,
                 datasets: [{
                     label: 'Cases',
                     data: trend,
@@ -621,11 +130,10 @@ document
     }
 
     function renderDepartment(department) {
-        const ctx = document.getElementById('departmentChart');
+        const canvas = document.getElementById('departmentChart');
+        destroyIfExists(canvas);
 
-        if (charts.department) charts.department.destroy();
-
-        charts.department = new Chart(ctx, {
+        new Chart(canvas, {
             type: 'bar',
             data: {
                 labels: department.labels,
@@ -650,16 +158,15 @@ document
     }
 
     function renderCaseType(caseType) {
-        const ctx = document.getElementById('caseTypeChart');
-
-        if (charts.caseType) charts.caseType.destroy();
+        const canvas = document.getElementById('caseTypeChart');
+        destroyIfExists(canvas);
 
         if (!caseType.labels.length) {
-            ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
             return;
         }
 
-        charts.caseType = new Chart(ctx, {
+        new Chart(canvas, {
             type: 'doughnut',
             data: {
                 labels: caseType.labels,
@@ -684,11 +191,10 @@ document
     }
 
     function renderSatisfaction(satisfaction) {
-        const ctx = document.getElementById('satisfactionChart');
+        const canvas = document.getElementById('satisfactionChart');
+        destroyIfExists(canvas);
 
-        if (charts.satisfaction) charts.satisfaction.destroy();
-
-        charts.satisfaction = new Chart(ctx, {
+        new Chart(canvas, {
             type: 'bar',
             data: {
                 labels: satisfaction.labels,
@@ -759,7 +265,12 @@ document
             .then(res => res.json())
             .then(data => {
                 renderKpis(data.summary);
-                renderTrend(data.trend, document.getElementById('dashYear').value);
+                renderTrend(
+                    data.trend,
+                    data.trend_labels,
+                    document.getElementById('dashDateFrom').value,
+                    document.getElementById('dashDateTo').value
+                );
                 renderDepartment(data.department);
                 renderCaseType(data.case_type);
                 renderSatisfaction(data.satisfaction);
@@ -772,15 +283,15 @@ document
     }
 
     function bindFilters() {
-        const ids = ['dashYear', 'dashMonth', 'dashStatus', 'dashType', 'dashDept'];
+        const ids = ['dashDateFrom', 'dashDateTo', 'dashStatus', 'dashType', 'dashDept'];
         if (isAdmin) ids.unshift('dashSite');
 
         ids.forEach(id => document.getElementById(id).addEventListener('change', loadDashboard));
 
         document.getElementById('resetDash').addEventListener('click', () => {
             if (isAdmin) document.getElementById('dashSite').value = '';
-            document.getElementById('dashYear').value = new Date().getFullYear();
-            document.getElementById('dashMonth').value = '';
+            document.getElementById('dashDateFrom').value = defaultDateFrom();
+            document.getElementById('dashDateTo').value = defaultDateTo();
             document.getElementById('dashStatus').value = '';
             document.getElementById('dashType').value = '';
             document.getElementById('dashDept').value = '';
@@ -788,6 +299,12 @@ document
         });
     }
 
+    function initDefaults() {
+        document.getElementById('dashDateFrom').value = defaultDateFrom();
+        document.getElementById('dashDateTo').value = defaultDateTo();
+    }
+
+    initDefaults();
     bindFilters();
     loadDashboard();
 

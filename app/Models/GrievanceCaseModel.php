@@ -128,12 +128,12 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('site_id', $filter['site_id']);
         }
 
-        if (!empty($filter['year'])) {
-            $builder->where("YEAR(received_date)", (int)$filter['year'], false);
+        if (!empty($filter['date_from'])) {
+            $builder->where('received_date >=', $filter['date_from']);
         }
 
-        if (!empty($filter['month'])) {
-            $builder->where('MONTH(received_date)', $filter['month']);
+        if (!empty($filter['date_to'])) {
+            $builder->where('received_date <=', $filter['date_to']);
         }
 
         if (!empty($filter['department_id'])) {
@@ -195,32 +195,47 @@ class GrievanceCaseModel extends BaseModel
         ];
 
         /*
-    |--------------------------------------------------------------------------
-    | MONTHLY TREND
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| MONTHLY TREND (berdasarkan date range yang dipilih)
+|--------------------------------------------------------------------------
+*/
 
-        $trend = [];
+        $trend       = [];
+        $trendLabels = [];
 
-        for ($i = 1; $i <= 12; $i++) {
+        if (!empty($filter['date_from']) && !empty($filter['date_to'])) {
 
-            $builder = $this->applyFilter(
-                $db->table($this->table),
-                $filter
-            );
+            $cursor    = new \DateTime(date('Y-m-01', strtotime($filter['date_from'])));
+            $endCursor = new \DateTime(date('Y-m-01', strtotime($filter['date_to'])));
 
-            $builder
-                ->where('MONTH(received_date)', $i)
-                ->where('YEAR(received_date)', !empty($filter['year']) ? $filter['year'] : date('Y'));
+            // Batasi maksimal 36 bulan biar chart gak meledak kalau user pilih range super panjang
+            $monthCount = 0;
 
-            $trend[] = $builder->countAllResults();
+            while ($cursor <= $endCursor && $monthCount < 36) {
+
+                $monthStart = max($cursor->format('Y-m-d'), $filter['date_from']);
+                $monthEnd   = min($cursor->format('Y-m-t'), $filter['date_to']);
+
+                $monthFilter = array_merge($filter, [
+                    'date_from' => $monthStart,
+                    'date_to'   => $monthEnd,
+                ]);
+
+                $count = $this->applyFilter($db->table($this->table), $monthFilter)->countAllResults();
+
+                $trendLabels[] = $cursor->format('M Y');
+                $trend[]       = $count;
+
+                $cursor->modify('+1 month');
+                $monthCount++;
+            }
         }
 
         /*
-    |--------------------------------------------------------------------------
-    | DEPARTMENT
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| DEPARTMENT
+|--------------------------------------------------------------------------
+*/
 
         $builder = $db->table('grievance_cases gc')
             ->select('md.name, COUNT(*) total')
@@ -230,12 +245,12 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('gc.site_id', $filter['site_id']);
         }
 
-        if (!empty($filter['year'])) {
-            $builder->where('YEAR(gc.received_date)', $filter['year']);
+        if (!empty($filter['date_from'])) {
+            $builder->where('gc.received_date >=', $filter['date_from']);
         }
 
-        if (!empty($filter['month'])) {
-            $builder->where('MONTH(gc.received_date)', $filter['month']);
+        if (!empty($filter['date_to'])) {
+            $builder->where('gc.received_date <=', $filter['date_to']);
         }
 
         if (!empty($filter['status_id'])) {
@@ -252,23 +267,17 @@ class GrievanceCaseModel extends BaseModel
             ->limit(5)
             ->get()
             ->getResultArray();
-
-        $department = [
-            'labels' => [],
-            'data' => []
-        ];
-
-        foreach ($departmentRows as $row) {
-
-            $department['labels'][] = $row['name'];
-            $department['data'][] = (int)$row['total'];
-        }
-
         /*
     |--------------------------------------------------------------------------
     | CASE TYPE
     |--------------------------------------------------------------------------
     */
+
+        /*
+|--------------------------------------------------------------------------
+| CASE TYPE
+|--------------------------------------------------------------------------
+*/
 
         $builder = $db->table('grievance_cases gc')
             ->select('mc.name, COUNT(*) total')
@@ -278,12 +287,12 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('gc.site_id', $filter['site_id']);
         }
 
-        if (!empty($filter['year'])) {
-            $builder->where('YEAR(gc.received_date)', $filter['year']);
+        if (!empty($filter['date_from'])) {
+            $builder->where('gc.received_date >=', $filter['date_from']);
         }
 
-        if (!empty($filter['month'])) {
-            $builder->where('MONTH(gc.received_date)', $filter['month']);
+        if (!empty($filter['date_to'])) {
+            $builder->where('gc.received_date <=', $filter['date_to']);
         }
 
         if (!empty($filter['department_id'])) {
@@ -299,17 +308,6 @@ class GrievanceCaseModel extends BaseModel
             ->orderBy('total', 'DESC')
             ->get()
             ->getResultArray();
-
-        $caseType = [
-            'labels' => [],
-            'data' => []
-        ];
-
-        foreach ($typeRows as $row) {
-
-            $caseType['labels'][] = $row['name'];
-            $caseType['data'][] = (int)$row['total'];
-        }
 
         /*
     |--------------------------------------------------------------------------
@@ -402,21 +400,14 @@ class GrievanceCaseModel extends BaseModel
             $satisfaction['data'][] = (int)$row['total'];
         }
         return [
-
             'summary'      => $summary,
-
             'trend'        => $trend,
-
+            'trend_labels' => $trendLabels,
             'department'   => $department,
-
             'case_type'    => $caseType,
-
             'satisfaction' => $satisfaction,
-
             'recent'       => $recent,
-
             'overdue'      => $overdue
-
         ];
     }
     public function createCase($request, ?int $forcedSiteId = null)

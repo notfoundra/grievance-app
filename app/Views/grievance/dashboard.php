@@ -36,25 +36,13 @@
     </div>
 
     <div class="field">
-        <label>Month</label>
-        <select id="dashMonth">
-            <option value="">All Months</option>
-            <?php
-            $months = [1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'];
-            foreach ($months as $k => $v) : ?>
-                <option value="<?= $k ?>"><?= $v ?></option>
-            <?php endforeach; ?>
-        </select>
+        <label>Date From</label>
+        <input type="date" id="dashDateFrom">
     </div>
 
     <div class="field">
-        <label>Status</label>
-        <select id="dashStatus">
-            <option value="">All Statuses</option>
-            <?php foreach ($statuses as $status) : ?>
-                <option value="<?= $status['id'] ?>"><?= esc($status['name']) ?></option>
-            <?php endforeach; ?>
-        </select>
+        <label>Date To</label>
+        <input type="date" id="dashDateTo">
     </div>
 
     <div class="field">
@@ -91,7 +79,7 @@
         <div class="card-title">
             <div>
                 <h3>Monthly Grievance Trend</h3>
-                <small id="trendYearLabel">This Year</small>
+                <small id="trendYearLabel">Last 6 months</small>
             </div>
         </div>
         <div class="chart-wrapper">
