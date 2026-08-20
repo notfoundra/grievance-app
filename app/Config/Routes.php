@@ -34,6 +34,22 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->post('store', 'CaseController::store');
         $routes->get('attachment/(:num)', 'CaseController::downloadAttachment/$1');
     });
+    $routes->group('grievance/master-data', ['filter' => 'auth:admin'], function ($routes) {
+        $routes->get('/', 'MasterDataController::index');
+        $routes->get('list/(:segment)', 'MasterDataController::list/$1');
+        $routes->post('(:segment)/store', 'MasterDataController::store/$1');
+        $routes->post('(:segment)/update/(:num)', 'MasterDataController::update/$1/$2');
+        $routes->post('(:segment)/toggle/(:num)', 'MasterDataController::toggleActive/$1/$2');
+    });
+    $routes->group('user', function ($routes) {
+        $routes->get('/', 'UserController::index');
+        $routes->get('getData', 'UserController::getData');
+        $routes->post('store', 'UserController::store');
+        $routes->get('edit/(:num)', 'UserController::edit/$1');
+        $routes->post('update/(:num)', 'UserController::update/$1');
+        $routes->post('delete/(:num)', 'UserController::delete/$1');
+        $routes->post('toggleStatus/(:num)', 'UserController::toggleStatus/$1'); // Tambahkan ini
+    });
 });
 $routes->group('grievance/import', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('/', 'ImportController::index');

@@ -37,6 +37,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="<?= base_url('assets/grievance/js/grievance.js') ?>"></script>
 
+
     <script>
         const APP = {
             baseUrl: "<?= base_url() ?>/"

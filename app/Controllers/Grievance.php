@@ -12,6 +12,7 @@ use App\Models\MasterDepartmentModel;
 use App\Models\MasterCaseTypeModel;
 use App\Models\MasterStatusModel;
 use App\Models\MasterPriorityModel;
+use App\Models\UserModel;
 
 class Grievance extends BaseController
 {
@@ -111,5 +112,33 @@ class Grievance extends BaseController
         return $this->response->setJSON(
             $this->caseModel->getFollowUpBoard($filter)
         );
+    }
+    public function masterdata()
+    {
+        $siteModel = new MasterSiteModel();
+        $sites = $siteModel->where('is_active', 1)->findAll();
+
+        if (! has_role(\App\Models\UserModel::ROLE_ADMIN)) {
+            $sites = array_values(array_filter(
+                $sites,
+                fn($s) => (int) $s['id'] === (int) current_user()['site_id']
+            ));
+        }
+
+        $data = [
+            'sites'       => $sites,
+            'departments' => (new MasterDepartmentModel())->where('is_active', 1)->orderBy('name')->findAll(),
+            'caseTypes'   => (new MasterCaseTypeModel())->where('is_active', 1)->orderBy('name')->findAll(),
+            'priorities'  => (new MasterPriorityModel())->where('is_active', 1)->findAll(),
+        ];
+        return view('grievance/masterdata', $data);
+    }
+    public function users()
+    {
+
+        $data = [
+            'user' => (new UserModel())->orderBy('name')->findAll(),
+        ];
+        return view('grievance/user', $data);
     }
 }
