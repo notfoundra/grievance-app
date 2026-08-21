@@ -1,5 +1,5 @@
 (function () {
-    const baseUrl = '/user'; // Sesuaikan dengan baseUrl aplikasimu
+    const baseUrl = 'http://voice.kahatex-cj.local/user'; // Sesuaikan dengan baseUrl aplikasimu
 
     // Inisialisasi DataTable
     let table = $('#tableUsers').DataTable({
