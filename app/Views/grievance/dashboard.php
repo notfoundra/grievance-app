@@ -3,6 +3,7 @@
 <div class="filterbar card">
 
     <?php if ($user['role'] === 'admin') : ?>
+
         <div class="field">
             <label>Site</label>
             <select id="dashSite">
@@ -12,7 +13,9 @@
                 <?php endforeach; ?>
             </select>
         </div>
+
     <?php else : ?>
+
         <div class="field">
             <label>Site</label>
             <div class="field-static">
@@ -20,7 +23,17 @@
                 <?= esc($sites[0]['name'] ?? '-') ?>
             </div>
         </div>
+
     <?php endif; ?>
+
+    <div class="field">
+        <label>Year</label>
+        <select id="dashYear">
+            <?php for ($y = (int) date('Y'); $y >= 2022; $y--) : ?>
+                <option value="<?= $y ?>" <?= $y == date('Y') ? 'selected' : '' ?>><?= $y ?></option>
+            <?php endfor; ?>
+        </select>
+    </div>
 
     <div class="field">
         <label>Date From</label>
@@ -30,16 +43,6 @@
     <div class="field">
         <label>Date To</label>
         <input type="date" id="dashDateTo">
-    </div>
-
-    <div class="field">
-        <label>Status</label>
-        <select id="dashStatus">
-            <option value="">All Statuses</option>
-            <?php foreach ($statuses as $status) : ?>
-                <option value="<?= $status['id'] ?>"><?= esc($status['name']) ?></option>
-            <?php endforeach; ?>
-        </select>
     </div>
 
     <div class="field">
