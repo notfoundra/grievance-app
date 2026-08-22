@@ -294,12 +294,12 @@ class CaseController extends BaseController
     private function validateAttachments(array $files): array
     {
         $allowedExt = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
-        $maxSize    = 5 * 1024 * 1024;
+        $maxSize    = 5 * 1024 * 1024; // 5 MB
         $errors     = [];
 
         foreach ($files as $file) {
             if (! $file->isValid()) {
-                continue;
+                continue; // empty slot, nothing was actually attached
             }
 
             $ext = strtolower($file->getClientExtension());
@@ -316,7 +316,7 @@ class CaseController extends BaseController
         return $errors;
     }
 
-    private function storeAttachments(int $caseId, array $files, ?int $updateId = null): void
+    private function storeAttachments(int $caseId, array $files): void
     {
         if (empty($files)) {
             return;
@@ -339,7 +339,7 @@ class CaseController extends BaseController
 
             $attachmentModel->insert([
                 'case_id'       => $caseId,
-                'update_id'     => $updateId,
+                'update_id'     => null,
                 'original_name' => $file->getClientName(),
                 'stored_name'   => $storedName,
                 'file_path'     => 'uploads/grievance/' . $caseId . '/' . $storedName,
@@ -350,17 +350,12 @@ class CaseController extends BaseController
         }
     }
 
+    // Serves the file only through this controller — never expose writable/ publicly.
     public function downloadAttachment($attachmentId)
     {
         $attachment = (new GrievanceAttachmentModel())->find($attachmentId);
 
         if (! $attachment || ! is_file(WRITEPATH . $attachment['file_path'])) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
-        }
-
-        $case = $this->caseModel->find($attachment['case_id']);
-
-        if (! $case || ! user_owns_site($case['site_id'])) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 

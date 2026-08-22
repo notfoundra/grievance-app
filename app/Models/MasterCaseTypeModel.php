@@ -11,6 +11,7 @@ class MasterCaseTypeModel extends BaseModel
     protected $allowedFields = [
         'name',
         'description',
+        'sort_order',
         'is_active'
     ];
 }
