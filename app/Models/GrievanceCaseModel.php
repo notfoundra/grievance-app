@@ -14,9 +14,8 @@ class GrievanceCaseModel extends BaseModel
 
     protected $allowedFields = [
         'case_number',
-        'source',
-        'external_id',
         'site_id',
+        'gender',
         'channel_id',
         'message_type_id',
         'case_type_id',
@@ -72,26 +71,28 @@ class GrievanceCaseModel extends BaseModel
 
             ->join('master_statuses', 'master_statuses.id = grievance_cases.status_id', 'left');
     }
-    public function getDatatable(?int $siteId = null)
+    public function getDatatable()
     {
-        $builder = $this->db
+        return $this->db
             ->table('grievance_cases gc')
             ->select('
-        gc.id, gc.case_number, gc.received_date, gc.target_closure_date,
-        gc.pic, gc.message, gc.site_id,
-        md.name AS department, mc.name AS case_type,
-        mp.name AS priority, ms.name AS status
+        gc.id,
+        gc.case_number,
+        gc.received_date,
+        gc.target_closure_date,
+        gc.pic,
+        gc.message,
+        md.name AS department,
+        mc.name AS case_type,
+        mp.name AS priority,
+        ms.name AS status
     ')
             ->join('master_departments md', 'md.id=gc.department_id', 'left')
             ->join('master_case_types mc', 'mc.id=gc.case_type_id', 'left')
             ->join('master_priorities mp', 'mp.id=gc.priority_id', 'left')
-            ->join('master_statuses ms', 'ms.id=gc.status_id', 'left');
-
-        if ($siteId) {
-            $builder->where('gc.site_id', $siteId);
-        }
-
-        return $builder->get()->getResultArray();
+            ->join('master_statuses ms', 'ms.id=gc.status_id', 'left')
+            ->get()
+            ->getResultArray();
     }
     public function getDetail($id)
     {
@@ -129,12 +130,12 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('site_id', $filter['site_id']);
         }
 
-        if (!empty($filter['date_from'])) {
-            $builder->where('received_date >=', $filter['date_from']);
+        if (!empty($filter['year'])) {
+            $builder->where("YEAR(received_date)", (int)$filter['year'], false);
         }
 
-        if (!empty($filter['date_to'])) {
-            $builder->where('received_date <=', $filter['date_to']);
+        if (!empty($filter['month'])) {
+            $builder->where('MONTH(received_date)', $filter['month']);
         }
 
         if (!empty($filter['department_id'])) {
@@ -191,52 +192,37 @@ class GrievanceCaseModel extends BaseModel
                 ->where('target_closure_date <', date('Y-m-d'))
                 ->countAllResults(),
 
-            'response' => $this->getAvgResponseDays($filter),
+            'response' => '0 Day'
 
         ];
 
         /*
-|--------------------------------------------------------------------------
-| MONTHLY TREND (berdasarkan date range yang dipilih)
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | MONTHLY TREND
+    |--------------------------------------------------------------------------
+    */
 
-        $trend       = [];
-        $trendLabels = [];
+        $trend = [];
 
-        if (!empty($filter['date_from']) && !empty($filter['date_to'])) {
+        for ($i = 1; $i <= 12; $i++) {
 
-            $cursor    = new \DateTime(date('Y-m-01', strtotime($filter['date_from'])));
-            $endCursor = new \DateTime(date('Y-m-01', strtotime($filter['date_to'])));
+            $builder = $this->applyFilter(
+                $db->table($this->table),
+                $filter
+            );
 
-            // Batasi maksimal 36 bulan biar chart gak meledak kalau user pilih range super panjang
-            $monthCount = 0;
+            $builder
+                ->where('MONTH(received_date)', $i)
+                ->where('YEAR(received_date)', !empty($filter['year']) ? $filter['year'] : date('Y'));
 
-            while ($cursor <= $endCursor && $monthCount < 36) {
-
-                $monthStart = max($cursor->format('Y-m-d'), $filter['date_from']);
-                $monthEnd   = min($cursor->format('Y-m-t'), $filter['date_to']);
-
-                $monthFilter = array_merge($filter, [
-                    'date_from' => $monthStart,
-                    'date_to'   => $monthEnd,
-                ]);
-
-                $count = $this->applyFilter($db->table($this->table), $monthFilter)->countAllResults();
-
-                $trendLabels[] = $cursor->format('M Y');
-                $trend[]       = $count;
-
-                $cursor->modify('+1 month');
-                $monthCount++;
-            }
+            $trend[] = $builder->countAllResults();
         }
 
         /*
-|--------------------------------------------------------------------------
-| DEPARTMENT
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | DEPARTMENT
+    |--------------------------------------------------------------------------
+    */
 
         $builder = $db->table('grievance_cases gc')
             ->select('md.name, COUNT(*) total')
@@ -246,12 +232,12 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('gc.site_id', $filter['site_id']);
         }
 
-        if (!empty($filter['date_from'])) {
-            $builder->where('gc.received_date >=', $filter['date_from']);
+        if (!empty($filter['year'])) {
+            $builder->where('YEAR(gc.received_date)', $filter['year']);
         }
 
-        if (!empty($filter['date_to'])) {
-            $builder->where('gc.received_date <=', $filter['date_to']);
+        if (!empty($filter['month'])) {
+            $builder->where('MONTH(gc.received_date)', $filter['month']);
         }
 
         if (!empty($filter['status_id'])) {
@@ -281,10 +267,10 @@ class GrievanceCaseModel extends BaseModel
 
 
         /*
-|--------------------------------------------------------------------------
-| CASE TYPE
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | CASE TYPE
+    |--------------------------------------------------------------------------
+    */
 
         $builder = $db->table('grievance_cases gc')
             ->select('mc.name, COUNT(*) total')
@@ -294,12 +280,12 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('gc.site_id', $filter['site_id']);
         }
 
-        if (!empty($filter['date_from'])) {
-            $builder->where('gc.received_date >=', $filter['date_from']);
+        if (!empty($filter['year'])) {
+            $builder->where('YEAR(gc.received_date)', $filter['year']);
         }
 
-        if (!empty($filter['date_to'])) {
-            $builder->where('gc.received_date <=', $filter['date_to']);
+        if (!empty($filter['month'])) {
+            $builder->where('MONTH(gc.received_date)', $filter['month']);
         }
 
         if (!empty($filter['department_id'])) {
@@ -333,7 +319,6 @@ class GrievanceCaseModel extends BaseModel
 
         $builder = $db->table('grievance_cases gc')
             ->select('
-              gc.id,
             gc.case_number,
             md.name AS department,
             mc.name AS case_type,
@@ -416,21 +401,29 @@ class GrievanceCaseModel extends BaseModel
             $satisfaction['data'][] = (int)$row['total'];
         }
         return [
+
             'summary'      => $summary,
+
             'trend'        => $trend,
-            'trend_labels' => $trendLabels,
+
             'department'   => $department,
+
             'case_type'    => $caseType,
+
             'satisfaction' => $satisfaction,
+
             'recent'       => $recent,
+
             'overdue'      => $overdue
+
         ];
     }
-    public function createCase($request, ?int $forcedSiteId = null)
+    public function createCase($request)
     {
         $data = [
             'case_number'         => $this->generateCaseNumber(),
-            'site_id'     => $forcedSiteId ?: $request->getPost('site_id'),
+            'site_id'              => $request->getPost('site_id'),
+            'gender'               => $request->getPost('gender') ?: null,
             'department_id'        => $request->getPost('department_id'),
             'channel_id'           => $request->getPost('channel_id'),
             'message_type_id'      => $request->getPost('message_type_id'),
@@ -545,6 +538,7 @@ class GrievanceCaseModel extends BaseModel
         ")
             ->join('master_departments md', 'md.id = gc.department_id', 'left')
             ->join('master_case_types mc', 'mc.id = gc.case_type_id', 'left')
+            ->join('master_message_types mt', 'mt.id = gc.message_type_id', 'left')
             ->join('master_priorities mp', 'mp.id = gc.priority_id', 'left')
             ->join('master_statuses ms', 'ms.id = gc.status_id', 'left');
 

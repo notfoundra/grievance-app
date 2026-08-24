@@ -53,6 +53,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->post('delete/(:num)', 'UserController::delete/$1');
         $routes->post('toggleStatus/(:num)', 'UserController::toggleStatus/$1'); // Tambahkan ini
     });
+    $routes->group('reports', function ($routes) {
+        $routes->get('export/suggestion-form', 'ReportController::exportSuggestionForm');
+    });
 });
 $routes->group('grievance/import', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('/', 'ImportController::index');

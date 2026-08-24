@@ -36,6 +36,7 @@ class MasterDataSeeder extends Seeder
             ['name' => 'WhatsApp / Hotline', 'description' => 'WhatsApp', 'is_active' => 1],
             ['name' => 'Direct (Face to Face)', 'description' => 'Tatap Muka', 'is_active' => 1],
             ['name' => 'Worker Representative', 'description' => 'Perwakilan Pekerja', 'is_active' => 1],
+            ['name' => 'Wovo', 'description' => 'Aplikasi Wovo', 'is_active' => 1],
         ]);
 
         /*
@@ -53,23 +54,28 @@ class MasterDataSeeder extends Seeder
         |--------------------------------------------------------------------------
         | CASE TYPES
         |--------------------------------------------------------------------------
+        | Selaras dengan 17 "Kategori Saran" pada formulir FOR-HR-019
+        | (Tanggapan Saran-Saran Anda). Urutan sort_order mengikuti urutan
+        | kategori pada formulir tersebut, dipakai juga saat generate report.
         */
         $this->db->table('master_case_types')->insertBatch([
-            ['name' => 'Occupational Health, Safety & Environment', 'is_active' => 1],
-            ['name' => 'Wages & Incentives', 'is_active' => 1],
-            ['name' => 'Benefits', 'is_active' => 1],
-            ['name' => 'General Facilities', 'is_active' => 1],
-            ['name' => 'Working Hours', 'is_active' => 1],
-            ['name' => 'Production', 'is_active' => 1],
-            ['name' => 'Recruitment & Contract', 'is_active' => 1],
-            ['name' => 'Personal Change & Performance Appraisal', 'is_active' => 1],
-            ['name' => 'Disciplinary Action', 'is_active' => 1],
-            ['name' => 'Workplace Disputes', 'is_active' => 1],
-            ['name' => 'Communication & Grievance Channels', 'is_active' => 1],
-            ['name' => 'Freedom of association and workers representation', 'is_active' => 1],
-            ['name' => 'Personal Affairs', 'is_active' => 1],
-            ['name' => 'Others', 'is_active' => 1],
-
+            ['name' => 'Occupational HSE', 'sort_order' => 1, 'is_active' => 1],
+            ['name' => 'Wages and incentives', 'sort_order' => 2, 'is_active' => 1],
+            ['name' => 'Benefits', 'sort_order' => 3, 'is_active' => 1],
+            ['name' => 'General Facilities', 'sort_order' => 4, 'is_active' => 1],
+            ['name' => 'Harassment and abuse', 'sort_order' => 5, 'is_active' => 1],
+            ['name' => 'Working hours', 'sort_order' => 6, 'is_active' => 1],
+            ['name' => 'Production', 'sort_order' => 7, 'is_active' => 1],
+            ['name' => 'Recruitment and contract', 'sort_order' => 8, 'is_active' => 1],
+            ['name' => 'Termination and resignation', 'sort_order' => 9, 'is_active' => 1],
+            ['name' => 'Personal change and performance appraisal', 'sort_order' => 10, 'is_active' => 1],
+            ['name' => 'Disciplinary actions', 'sort_order' => 11, 'is_active' => 1],
+            ['name' => 'Workplace disputes', 'sort_order' => 12, 'is_active' => 1],
+            ['name' => 'Communication and grievance channels', 'sort_order' => 13, 'is_active' => 1],
+            ['name' => 'Freedom of association and worker representations', 'sort_order' => 14, 'is_active' => 1],
+            ['name' => 'Personal affairs', 'sort_order' => 15, 'is_active' => 1],
+            ['name' => 'Other', 'sort_order' => 16, 'is_active' => 1],
+            ['name' => 'Junk', 'sort_order' => 17, 'is_active' => 1],
         ]);
 
         /*
