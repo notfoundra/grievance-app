@@ -12,6 +12,8 @@ class UserModel extends BaseModel
     protected $primaryKey     = 'id';
     protected $useSoftDeletes = true;
     protected $deletedField   = 'deleted_at';
+    protected $beforeInsert = ['hashPassword'];
+    protected $beforeUpdate = ['hashPassword'];
 
     protected $allowedFields = [
         'name',
@@ -36,5 +38,16 @@ class UserModel extends BaseModel
     public function touchLastLogin(int $id): void
     {
         $this->update($id, ['last_login_at' => date('Y-m-d H:i:s')]);
+    }
+    protected function hashPassword(array $data)
+    {
+        if (! empty($data['data']['password'])) {
+            $data['data']['password'] = password_hash(
+                $data['data']['password'],
+                PASSWORD_DEFAULT
+            );
+        }
+
+        return $data;
     }
 }
