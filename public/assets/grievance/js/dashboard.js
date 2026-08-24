@@ -98,7 +98,7 @@
     function renderTrend(trend, labels, dateFrom, dateTo) {
         document.getElementById('trendYearLabel').textContent =
             `${fmtDateShort(dateFrom)} – ${fmtDateShort(dateTo)}`;
-
+console.log(labels);
         const canvas = document.getElementById('trendChart');
         destroyIfExists(canvas);
 
@@ -266,7 +266,6 @@
             .then(res => res.json())
             .then(data => {
                 renderKpis(data.summary);
-                console.log(data);
                 renderTrend(
                     data.trend,
                     data.trend_labels,

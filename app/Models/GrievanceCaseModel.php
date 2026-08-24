@@ -130,12 +130,12 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('site_id', $filter['site_id']);
         }
 
-        if (!empty($filter['year'])) {
-            $builder->where("YEAR(received_date)", (int)$filter['year'], false);
+        if (!empty($filter['date_from'])) {
+            $builder->where('received_date >=', $filter['date_from']);
         }
 
-        if (!empty($filter['month'])) {
-            $builder->where('MONTH(received_date)', $filter['month']);
+        if (!empty($filter['date_to'])) {
+            $builder->where('received_date <=', $filter['date_to']);
         }
 
         if (!empty($filter['department_id'])) {
@@ -202,20 +202,41 @@ class GrievanceCaseModel extends BaseModel
     |--------------------------------------------------------------------------
     */
 
-        $trend = [];
+        /*
+|--------------------------------------------------------------------------
+| MONTHLY TREND (berdasarkan date range yang dipilih)
+|--------------------------------------------------------------------------
+*/
 
-        for ($i = 1; $i <= 12; $i++) {
+        $trend       = [];
+        $trendLabels = [];
 
-            $builder = $this->applyFilter(
-                $db->table($this->table),
-                $filter
-            );
+        if (!empty($filter['date_from']) && !empty($filter['date_to'])) {
 
-            $builder
-                ->where('MONTH(received_date)', $i)
-                ->where('YEAR(received_date)', !empty($filter['year']) ? $filter['year'] : date('Y'));
+            $cursor    = new \DateTime(date('Y-m-01', strtotime($filter['date_from'])));
+            $endCursor = new \DateTime(date('Y-m-01', strtotime($filter['date_to'])));
 
-            $trend[] = $builder->countAllResults();
+            // Batasi maksimal 36 bulan biar chart gak meledak kalau user pilih range super panjang
+            $monthCount = 0;
+
+            while ($cursor <= $endCursor && $monthCount < 36) {
+
+                $monthStart = max($cursor->format('Y-m-d'), $filter['date_from']);
+                $monthEnd   = min($cursor->format('Y-m-t'), $filter['date_to']);
+
+                $monthFilter = array_merge($filter, [
+                    'date_from' => $monthStart,
+                    'date_to'   => $monthEnd,
+                ]);
+
+                $count = $this->applyFilter($db->table($this->table), $monthFilter)->countAllResults();
+
+                $trendLabels[] = $cursor->format('M Y');
+                $trend[]       = $count;
+
+                $cursor->modify('+1 month');
+                $monthCount++;
+            }
         }
 
         /*
@@ -401,21 +422,14 @@ class GrievanceCaseModel extends BaseModel
             $satisfaction['data'][] = (int)$row['total'];
         }
         return [
-
             'summary'      => $summary,
-
             'trend'        => $trend,
-
+            'trend_labels' => $trendLabels,
             'department'   => $department,
-
             'case_type'    => $caseType,
-
             'satisfaction' => $satisfaction,
-
             'recent'       => $recent,
-
             'overdue'      => $overdue
-
         ];
     }
     public function createCase($request)
