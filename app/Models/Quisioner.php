@@ -12,7 +12,7 @@ class Quisioner extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['master_quisioner_id', 'name', 'pretest', 'postest', 'keterangan'];
+    protected $allowedFields    = ['master_quisioner_id', 'name', 'pretest', 'posttest', 'keterangan'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

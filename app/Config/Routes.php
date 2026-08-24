@@ -22,6 +22,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('reports', 'ReportController::index');
         $routes->get('reports/monthly', 'ReportController::exportMonthly');
         $routes->get('quisioner', 'QuisionerController::index');
+        $routes->get('quisioner/data/(:num)', 'QuisionerController::data/$1');
     });
 
     $routes->group('dashboard', function ($routes) {
