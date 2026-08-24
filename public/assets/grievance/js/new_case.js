@@ -1,7 +1,6 @@
 const NewCase = {
 
-    MAX_FILE_SIZE: 5 * 1024 * 1024, // 5 MB
-    ALLOWED_EXT: ["jpg", "jpeg", "png", "pdf", "doc", "docx"],
+    
 
     init() {
         this.prepare();
@@ -191,59 +190,7 @@ const NewCase = {
         return "bi-file-earmark";
     },
 
-    /* ==========================================================
-       Submit
-       ========================================================== */
-    submit() {
-        const form = $("#formCase")[0];
-        const formData = new FormData(form);
-
-        $("#btnSubmit")
-            .prop("disabled", true)
-            .html('<i class="bi bi-hourglass-split"></i> Saving...');
-
-        $.ajax({
-            url: APP.baseUrl + "case/store",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            dataType: "json",
-            success: (response) => {
-                if (!response.status) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Failed",
-                        text: response.message || "Failed to save case."
-                    });
-                    return;
-                }
-
-                Swal.fire({
-                    icon: "success",
-                    title: "Success",
-                    text: response.message,
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = APP.baseUrl + "case/case-detail/" + response.id;
-                });
-            },
-            error: (xhr) => {
-                if (xhr.status === 422) {
-                    const html = $.map(xhr.responseJSON.errors, (value) => `<div class="text-start">• ${value}</div>`).join("");
-                    Swal.fire({ icon: "warning", title: "Validation Error", html });
-                } else {
-                    Swal.fire({ icon: "error", title: "Server Error", text: "Unexpected server error." });
-                }
-            },
-            complete: () => {
-                $("#btnSubmit")
-                    .prop("disabled", false)
-                    .html('<i class="bi bi-send"></i> Submit Case');
-            }
-        });
-    }
+  
 };
 
 $(document).ready(() => NewCase.init());

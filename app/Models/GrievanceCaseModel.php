@@ -22,6 +22,7 @@ class GrievanceCaseModel extends BaseModel
         'case_type_id',
         'department_id',
         'pic',
+        'gender',
         'priority_id',
         'status_id',
         'received_date',
@@ -267,11 +268,17 @@ class GrievanceCaseModel extends BaseModel
             ->limit(5)
             ->get()
             ->getResultArray();
-        /*
-    |--------------------------------------------------------------------------
-    | CASE TYPE
-    |--------------------------------------------------------------------------
-    */
+        $department = [
+            'labels' => [],
+            'data' => []
+        ];
+
+        foreach ($departmentRows as $row) {
+
+            $department['labels'][] = $row['name'];
+            $department['data'][] = (int)$row['total'];
+        }
+
 
         /*
 |--------------------------------------------------------------------------
@@ -308,6 +315,15 @@ class GrievanceCaseModel extends BaseModel
             ->orderBy('total', 'DESC')
             ->get()
             ->getResultArray();
+        $caseType = [
+            'labels' => [],
+            'data' => []
+        ];
+        foreach ($typeRows as $row) {
+
+            $caseType['labels'][] = $row['name'];
+            $caseType['data'][] = (int)$row['total'];
+        }
 
         /*
     |--------------------------------------------------------------------------
@@ -420,6 +436,7 @@ class GrievanceCaseModel extends BaseModel
             'message_type_id'      => $request->getPost('message_type_id'),
             'case_type_id'         => $request->getPost('case_type_id'),
             'priority_id'          => $request->getPost('priority_id'),
+            'gender'          => $request->getPost('gender'),
             'status_id'            => 1, // Open
             'received_date'        => date('Y-m-d'),
             'target_response_date' => $request->getPost('target_response_date'),
@@ -581,5 +598,61 @@ class GrievanceCaseModel extends BaseModel
         }
 
         return $board;
+    }
+    public function getMonthlyReportRows(int $year, int $month, ?int $siteId = null): array
+    {
+        $builder = $this->db->table('grievance_cases gc')
+            ->select("
+            gc.case_number, gc.received_date, gc.message, gc.pic,gc.gender,
+            gc.repeated_case, gc.management_response,
+            ms.name AS site, md.name AS department, mc.name AS case_type,
+            mt.name AS message_type, mp.name AS priority, mst.name AS status
+        ")
+            ->join('master_sites ms', 'ms.id = gc.site_id', 'left')
+            ->join('master_departments md', 'md.id = gc.department_id', 'left')
+            ->join('master_case_types mc', 'mc.id = gc.case_type_id', 'left')
+            ->join('master_message_types mt', 'mt.id = gc.message_type_id', 'left')
+            ->join('master_priorities mp', 'mp.id = gc.priority_id', 'left')
+            ->join('master_statuses mst', 'mst.id = gc.status_id', 'left')
+            ->where('YEAR(gc.received_date)', $year)
+            ->where('MONTH(gc.received_date)', $month);
+
+        if ($siteId) {
+            $builder->where('gc.site_id', $siteId);
+        }
+
+        return $builder->orderBy('gc.received_date', 'ASC')->get()->getResultArray();
+    }
+
+    public function getMonthlyCaseTypeRecap(int $year, int $month, ?int $siteId = null): array
+    {
+        $caseTypeModel = new \App\Models\MasterCaseTypeModel();
+        $types         = $caseTypeModel->orderBy('id')->findAll();
+
+        $rows = $this->getMonthlyReportRows($year, $month, $siteId);
+
+        $recap = [];
+
+        foreach ($types as $type) {
+
+            $matching = array_values(array_filter(
+                $rows,
+                fn($r) => $r['case_type'] === $type['name']
+            ));
+
+            $notes = array_map(function ($r) {
+                $freq  = $r['repeated_case'] === 'Yes' ? 'Repeated' : 'New';
+                $label = mb_strimwidth(trim((string) $r['message']), 0, 40, '...');
+                return "{$label} ({$r['message_type']}, {$r['priority']}, {$freq})";
+            }, $matching);
+
+            $recap[] = [
+                'name'  => $type['name'],
+                'count' => count($matching),
+                'notes' => $notes,
+            ];
+        }
+
+        return $recap;
     }
 }

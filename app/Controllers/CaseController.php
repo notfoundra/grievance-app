@@ -42,10 +42,8 @@ class CaseController extends BaseController
 
         $allAttachments = $attachmentModel->forCase((int) $id);
 
-        // Attachment yang menempel di case (bukan follow-up tertentu)
         $caseAttachments = array_values(array_filter($allAttachments, fn($a) => $a['update_id'] === null));
 
-        // Attachment per follow-up, dikelompokkan by update_id
         $attachmentsByUpdate = [];
         foreach ($allAttachments as $a) {
             if ($a['update_id'] !== null) {
@@ -116,6 +114,7 @@ class CaseController extends BaseController
             'message_type_id'       => 'required|integer',
             'case_type_id'          => 'required|integer',
             'priority_id'           => 'required|integer',
+            'gender'           => 'required|min_length[4]',
             'message'               => 'required|min_length[10]',
             'target_response_date'  => 'required|valid_date',
             'target_closure_date'   => 'required|valid_date',

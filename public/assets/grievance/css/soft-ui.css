@@ -522,3 +522,17 @@ table.dataTable tbody tr:hover{background:#f8f9fe}
 .switch:disabled{opacity:.5;cursor:not-allowed}
 
 .desc-cell{color:#5b6a85;font-size:.75rem;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ============ REPORTS ============ */
+.report-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.1rem}
+.report-card{padding:1.5rem}
+.report-card .report-icon{
+  width:52px;height:52px;border-radius:1rem;
+  background:linear-gradient(135deg,var(--su-primary),var(--su-info));
+  color:#fff;display:grid;place-items:center;font-size:1.4rem;margin-bottom:1rem;
+}
+.report-card h4{margin:0 0 .4rem;font-size:.9rem;font-weight:800;color:var(--su-dark)}
+.report-card p{margin:0 0 1.1rem;font-size:.76rem;color:var(--su-muted);line-height:1.6}
+.report-card .report-doc{font-size:.65rem;color:#b6bfd1;margin-bottom:1rem}
+.report-filter-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end}
+
+@media(max-width:900px){.report-grid{grid-template-columns:1fr}}

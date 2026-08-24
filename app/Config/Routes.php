@@ -19,6 +19,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('case-log', 'Grievance::caseLog');
         $routes->get('follow-up', 'Grievance::followUp');
         $routes->get('follow-up-data', 'Grievance::followUpData');
+        $routes->get('reports', 'ReportController::index');
+        $routes->get('reports/monthly', 'ReportController::exportMonthly');
+        $routes->get('quisioner', 'QuisionerController::index');
     });
 
     $routes->group('dashboard', function ($routes) {

@@ -158,6 +158,7 @@
     }
 
     function renderCaseType(caseType) {
+        console.log(caseType);
         const canvas = document.getElementById('caseTypeChart');
         destroyIfExists(canvas);
 
@@ -169,7 +170,7 @@
         new Chart(canvas, {
             type: 'doughnut',
             data: {
-                labels: caseType.labels,
+                labels: caseType.label,
                 datasets: [{
                     data: caseType.data,
                     backgroundColor: palette,
@@ -265,6 +266,7 @@
             .then(res => res.json())
             .then(data => {
                 renderKpis(data.summary);
+                console.log(data);
                 renderTrend(
                     data.trend,
                     data.trend_labels,

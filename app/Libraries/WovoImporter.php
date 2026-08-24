@@ -113,6 +113,7 @@ class WovoImporter
             'initial_hours'   => $get('P'), // Initial Response Hours
             'satisfaction'    => $get('R'), // Case Satisfaction
             'channel'         => $get('T'), // Channel Used
+            'gender'         => $get('U'), // Channel Used
             'department_raw'  => $get('Z'), // Department
         ];
     }
@@ -219,6 +220,7 @@ class WovoImporter
             'case_number'           => $this->generateCaseNumberForDate($receivedDate),
             'source'                => 'wovo_import',
             'external_id'           => $r['case_id'],
+            'gender'           => $r['gender'],
             'site_id'               => $siteId,
             'channel_id'            => $channelId,
             'message_type_id'       => $messageTypeId,

@@ -104,6 +104,14 @@
                     <?php endforeach ?>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Gender</label>
+                <select name="gender">
+                    <option value="">Select Type</option>
+                    <option value="male">male</option>
+                    <option value="female">female</option>
+                </select>
+            </div>
 
             <div class="form-group">
                 <label>Case Type</label>
