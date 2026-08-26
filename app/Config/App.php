@@ -29,7 +29,7 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $allowedHostnames = [];
+    public array $allowedHostnames = ['voice.kahatex-cj.id', 'voice.kahatex-cj.local'];
 
     /**
      * --------------------------------------------------------------------------
