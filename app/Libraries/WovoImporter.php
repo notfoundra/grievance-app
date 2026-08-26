@@ -145,7 +145,7 @@ class WovoImporter
         if ($siteId === null) {
             $this->errors[] = [
                 'row'    => $row,
-                'reason' => "Site tidak dapat ditentukan dari Department \"{$r['department_raw']}\". Pastikan master_sites punya nama yang mengandung kata kunci Garmen/Socks.",
+                'reason' => "Site tidak dapat ditentukan dari Department \"{$r['department_raw']}\". Pastikan master_sites punya nama yang mengandung kata kunci Garmen/Kaoskaki.",
             ];
             return;
         }
@@ -269,7 +269,7 @@ class WovoImporter
     protected function matchSiteByKeyword(string $needle): ?int
     {
         // needle bisa berupa 'garment' -> cari site yg namanya mengandung 'garmen'
-        $normalized = str_contains($needle, 'kaos') || str_contains($needle, 'sock') ? 'socks' : 'garmen';
+        $normalized = str_contains($needle, 'kaos') || str_contains($needle, 'sock') ? 'kaoskaki' : 'garment';
 
         foreach ($this->sitesLoaded as $site) {
             if (str_contains(strtolower($site['name']), $normalized)) {
