@@ -15,7 +15,7 @@ $menus = [
     ['segment' => 'quisioner',   'url' => 'grievance/quisioner',    'icon' => 'bi-bar-chart',      'label' => 'quisioner',     'roles' => ['admin', 'socks', 'garmen']],
     ['segment' => 'master-data', 'url' => 'grievance/master-data', 'icon' => 'bi-database',    'label' => 'Master Data', 'roles' => ['admin']],
     ['segment' => 'user',     'url' => 'user',      'icon' => 'bi-people',         'label' => 'User',       'roles' => ['admin']],
-    ['segment' => 'settings',  'url' => 'grievance/settings',   'icon' => 'bi-gear',           'label' => 'Settings',    'roles' => ['admin']],
+    // ['segment' => 'settings',  'url' => 'grievance/settings',   'icon' => 'bi-gear',           'label' => 'Settings',    'roles' => ['admin']],
 ];
 
 ?>
