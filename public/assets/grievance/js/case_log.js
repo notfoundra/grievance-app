@@ -45,6 +45,9 @@ const CaseLog = {
                 {
                     data: "department"
                 },
+                {
+                    data: "message_type"
+                },
 
                 {
     data: "message",
@@ -255,61 +258,7 @@ $(document).ready(function () {
         return text.length > len ? text.slice(0, len) + '…' : text;
     }
 
-    let table;
-
-    function initTable(rows) {
-        if ($.fn.DataTable.isDataTable('#tableCases')) {
-            table = $('#tableCases').DataTable();
-            table.clear();
-            table.rows.add(mapRows(rows));
-            table.draw();
-            return;
-        }
-
-        table = $('#tableCases').DataTable({
-            data: mapRows(rows),
-            columns: [
-                { data: 'case_number', render: (v, t, row) => `<a href="${APP.baseUrl}case/case-detail/${row.id}" class="case-link">${v}</a>` },
-                { data: 'received_date', render: v => fmtDate(v) },
-                { data: 'department', render: v => v || '-' },
-                { data: 'message', render: v => truncate(v, 60) },
-                { data: 'priority', render: v => `<span class="priority ${priorityClass(v)}">${v || '-'}</span>` },
-                { data: 'status', render: v => `<span class="status ${statusPillClass(v)}">${v || '-'}</span>` },
-                { data: 'pic', render: v => v || '-' },
-                { data: 'target_closure_date', render: v => fmtDate(v) },
-                {
-                    data: null,
-                    orderable: false,
-                    render: (v, t, row) => `
-                        <a href="${APP.baseUrl}case/case-detail/${row.id}" class="btn btn-soft btn-icon" title="View">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                    `
-                },
-            ],
-            pageLength: 10,
-            lengthMenu: [10, 25, 50, 100],
-            order: [[1, 'desc']],
-            language: {
-                emptyTable: 'No cases found.',
-                zeroRecords: 'No matching cases found.',
-            },
-        });
-    }
-
-    function mapRows(rows) {
-        return rows.map(r => ({
-            id: r.id,
-            case_number: r.case_number,
-            received_date: r.received_date,
-            department: r.department,
-            message: r.message,
-            priority: r.priority,
-            status: r.status,
-            pic: r.pic,
-            target_closure_date: r.target_closure_date,
-        }));
-    }
+   
 
     function applyFilters(rows) {
         const search = $('#searchCase').val().toLowerCase().trim();

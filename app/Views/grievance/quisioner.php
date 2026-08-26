@@ -7,6 +7,20 @@
         <h2>Quisioner</h2>
         <small>Rekap hasil pretest & posttest per sesi training.</small>
     </div>
+
+    <div class="detail-action">
+        <a href="<?= site_url('grievance/quisioner/downloadTemplate') ?>" class="btn btn-success">
+
+            <i class="bi bi-file-earmark-excel"></i>Download Template</a>
+        <button type="button" class="btn btn-primary" id="btnOpenFollowUp">
+            <i class="bi bi-chat-left-text"></i> Follow Up
+        </button>
+        <button type="button" class="btn btn-primary" id="btnOpenImportQuiz">
+            <i class="bi bi-upload"></i> Import Quisioner
+        </button>
+    </div>
+
+
 </div>
 
 <div class="kpis-quiz">
@@ -48,7 +62,7 @@
                 <option value="">Belum ada data quisioner</option>
             <?php else : ?>
                 <?php foreach ($list as $m) : ?>
-                    <option value="<?= $m['id'] ?>"><?= esc($m['title']) ?></option>
+                    <option value="<?= $m['id'] ?>" <?= (string) $selectedId === (string) $m['id'] ? 'selected' : '' ?>><?= esc($m['title']) ?></option>
                 <?php endforeach; ?>
             <?php endif; ?>
         </select>
@@ -116,9 +130,63 @@
     </div>
 
 <?php endif; ?>
+<!-- ===================== MODAL: IMPORT QUISIONER ===================== -->
+<div class="modal-overlay" id="modalImportQuiz">
+    <div class="modal-box modal-sm">
 
+        <div class="modal-header">
+            <h4><i class="bi bi-upload"></i> Import Quisioner</h4>
+            <button type="button" class="modal-close" data-close="modalImportQuiz"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <form id="formImportQuiz" enctype="multipart/form-data">
+
+            <div class="modal-body">
+
+                <div class="form-group mb-3">
+                    <label>Judul Quisioner <span style="color:var(--su-danger)">*</span></label>
+                    <input type="text" name="title" maxlength="30" required placeholder="Contoh: Training K3 Batch 1">
+                    <span class="hint">Maksimal 30 karakter.</span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label>Deskripsi</label>
+                    <input type="text" name="description" maxlength="30" placeholder="Contoh: Juli 2026">
+                    <span class="hint">Maksimal 30 karakter, harus unik (belum pernah dipakai sebelumnya).</span>
+                </div>
+
+                <label class="upload-box" id="quizDropArea">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    <strong>Pilih atau drag file Excel di sini</strong>
+                    <span>Kolom yang dibaca: Nama (B), Nilai Pretest (G), Nilai Posttest (J), Keterangan (K)</span>
+                    <input id="quizFileInput" type="file" name="quiz_file" hidden accept=".xlsx,.xls">
+                </label>
+
+                <div id="quizFileInfo" class="mt-3" style="display:none">
+                    <div class="file-chip">
+                        <i class="bi bi-file-earmark"></i>
+                        <span class="name" id="quizFileName"></span>
+                        <button type="button" class="remove" id="btnRemoveQuizFile"><i class="bi bi-x-circle"></i></button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-close="modalImportQuiz">Batal</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmitImportQuiz" disabled>
+                    <i class="bi bi-upload"></i> Import
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('script') ?>
+
 <script src="<?= base_url('assets/grievance/js/quisioner.js') ?>"></script>
+
 <?= $this->endSection() ?>

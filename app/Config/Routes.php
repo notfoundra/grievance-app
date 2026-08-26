@@ -23,6 +23,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('reports/monthly', 'ReportController::exportMonthly');
         $routes->get('quisioner', 'QuisionerController::index');
         $routes->get('quisioner/data/(:num)', 'QuisionerController::data/$1');
+        $routes->post('quisioner/import', 'QuisionerController::import');
+        $routes->get('quisioner/downloadTemplate', 'QuisionerController::downloadTemplate');
     });
 
     $routes->group('dashboard', function ($routes) {

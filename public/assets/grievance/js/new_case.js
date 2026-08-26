@@ -60,28 +60,7 @@ const NewCase = {
        Events
        ========================================================== */
     bind() {
-        $("#formCase").on("submit", (e) => {
-            e.preventDefault();
-
-            if (!this.datesAreValid()) {
-                Swal.fire({
-                    icon: "warning",
-                    title: "Invalid Dates",
-                    text: "Target Closure Date cannot be earlier than Target Response Date."
-                });
-                return;
-            }
-
-            this.submit();
-        });
-
-        $("#btnDraft").on("click", () => {
-            Swal.fire({
-                icon: "info",
-                title: "Coming Soon",
-                text: "Save Draft feature is under development."
-            });
-        });
+       
 
         $("#dropArea").on("click", () => $("#attachment").trigger("click"));
 

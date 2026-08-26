@@ -81,6 +81,7 @@ class GrievanceCaseModel extends BaseModel
         gc.received_date,
         gc.target_closure_date,
         gc.pic,
+        mt.name as message_type ,
         gc.message,
         md.name AS department,
         mc.name AS case_type,
@@ -91,6 +92,7 @@ class GrievanceCaseModel extends BaseModel
             ->join('master_case_types mc', 'mc.id=gc.case_type_id', 'left')
             ->join('master_priorities mp', 'mp.id=gc.priority_id', 'left')
             ->join('master_statuses ms', 'ms.id=gc.status_id', 'left')
+            ->join('master_message_types mt', 'mt.id=gc.message_type_id', 'left')
             ->get()
             ->getResultArray();
     }

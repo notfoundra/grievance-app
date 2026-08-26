@@ -68,6 +68,7 @@
                 <th>Case No</th>
                 <th>Received</th>
                 <th>Department</th>
+                <th>Type</th>
                 <th>Message</th>
                 <th>Priority</th>
                 <th>Status</th>
