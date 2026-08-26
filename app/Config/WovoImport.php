@@ -13,7 +13,7 @@ class WovoImport extends BaseConfig
      * ATAU ganti nama site di master_sites biar mengandung kata ini.
      */
     public array $siteKeywords = [
-        'garmen' => ['garment'],
+        'garment' => ['garment'],
         'kaoskaki'  => ['kaos kaki', 'sock', 'kaoskaki', 'Kaos Kaki'],
     ];
 
