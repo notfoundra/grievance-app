@@ -157,7 +157,7 @@
 
             <div class="form-group">
                 <label>Received Date</label>
-                <input type="date" value="<?= date('Y-m-d') ?>" disabled>
+                <input type="date" value="<?= date('Y-m-d') ?>">
                 <span class="hint">Set automatically to today.</span>
             </div>
 
