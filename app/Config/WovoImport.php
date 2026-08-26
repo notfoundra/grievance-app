@@ -14,7 +14,7 @@ class WovoImport extends BaseConfig
      */
     public array $siteKeywords = [
         'garmen' => ['garment'],
-        'kaoskaki'  => ['kaos kaki', 'sock', 'kaoskaki'],
+        'kaoskaki'  => ['kaos kaki', 'sock', 'kaoskaki', 'Kaos Kaki'],
     ];
 
     /**
