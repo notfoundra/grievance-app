@@ -83,11 +83,50 @@ class QuisionerController extends BaseController
         ];
 
         return $this->response->setJSON([
-            'status'        => true,
-            'summary'       => $summary,
-            'passing_score' => $passingScore,
-            'participants'  => $rows,
+            'status'              => true,
+            'summary'             => $summary,
+            'passing_score'       => $passingScore,
+            'pretest_distribution'  => $this->buildDistribution($rows, 'pretest'),
+            'posttest_distribution' => $this->buildDistribution($rows, 'posttest'),
+            'participants'        => $rows,
         ]);
+    }
+
+    /**
+     * Kelompokkan nilai jadi rentang (0-59, 60-69, 70-79, 80-89, 90-100),
+     * dipakai buat pie chart distribusi nilai — jauh lebih kebaca ketimbang
+     * nampilin ribuan nama satu-satu di bar chart.
+     */
+    private function buildDistribution(array $rows, string $field): array
+    {
+        $buckets = [
+            '0-59'   => 0,
+            '60-69'  => 0,
+            '70-79'  => 0,
+            '80-89'  => 0,
+            '90-100' => 0,
+        ];
+
+        foreach ($rows as $r) {
+            $score = (int) $r[$field];
+
+            if ($score < 60) {
+                $buckets['0-59']++;
+            } elseif ($score < 70) {
+                $buckets['60-69']++;
+            } elseif ($score < 80) {
+                $buckets['70-79']++;
+            } elseif ($score < 90) {
+                $buckets['80-89']++;
+            } else {
+                $buckets['90-100']++;
+            }
+        }
+
+        return [
+            'labels' => array_keys($buckets),
+            'data'   => array_values($buckets),
+        ];
     }
 
     /**

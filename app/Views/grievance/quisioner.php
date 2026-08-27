@@ -94,12 +94,24 @@
         <div class="chart-card card">
             <div class="card-title">
                 <div>
-                    <h3>Nilai Pretest vs Posttest per Peserta</h3>
+                    <h3>Distribusi Nilai Pretest</h3>
+                    <small>Jumlah peserta per rentang nilai</small>
+                </div>
+            </div>
+            <div class="chart-wrapper" style="height:230px">
+                <canvas id="quizPretestChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card card">
+            <div class="card-title">
+                <div>
+                    <h3>Distribusi Nilai Posttest</h3>
                     <small id="quizAvgLabel">-</small>
                 </div>
             </div>
             <div class="chart-wrapper" style="height:230px">
-                <canvas id="quizScoreChart"></canvas>
+                <canvas id="quizPosttestChart"></canvas>
             </div>
         </div>
 

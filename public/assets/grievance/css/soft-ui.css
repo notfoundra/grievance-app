@@ -538,7 +538,7 @@ table.dataTable tbody tr:hover{background:#f8f9fe}
 @media(max-width:900px){.report-grid{grid-template-columns:1fr}}
 /* ============ QUISIONER ============ */
 .kpis-quiz{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem}
-.quiz-charts-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:1.1rem;margin-bottom:1.1rem}
+.quiz-charts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-bottom:1.1rem}
 
-@media(max-width:1100px){.quiz-charts-grid{grid-template-columns:1fr}}
-@media(max-width:900px){.kpis-quiz{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1100px){.quiz-charts-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.quiz-charts-grid{grid-template-columns:1fr}}

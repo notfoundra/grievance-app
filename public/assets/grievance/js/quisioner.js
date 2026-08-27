@@ -71,7 +71,7 @@
         });
     }
 
-    if (formImport) {
+       if (formImport) {
         formImport.addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -89,28 +89,71 @@
             })
                 .then(res => res.json())
                 .then(data => {
-                    if (data.status) {
-                        const r = data.result;
-                        let msg = `${r.created} peserta berhasil diimport.`;
-                        if (r.errors.length) msg += ` ${r.errors.length} baris gagal (cek konsol untuk detail).`;
-                        if (r.errors.length) console.warn('Import errors:', r.errors);
+                    btnSubmitImport.disabled = false;
+                    btnSubmitImport.innerHTML = '<i class="bi bi-upload"></i> Import';
 
-                        Swal.fire({ icon: 'success', title: 'Import selesai', text: msg }).then(() => {
-                            window.location.href = `${APP.baseUrl}grievance/quisioner?selected=${r.master_id}`;
-                        });
-                    } else {
-                        btnSubmitImport.disabled = false;
-                        btnSubmitImport.innerHTML = '<i class="bi bi-upload"></i> Import';
-
+                    if (! data.status) {
                         const errors = data.errors ? Object.values(data.errors).flat().join('<br>') : (data.message || 'Gagal import.');
                         Swal.fire({ icon: 'error', title: 'Gagal', html: errors });
+                        return;
                     }
+
+                    showImportResult(data.result);
                 })
                 .catch(() => {
                     btnSubmitImport.disabled = false;
                     btnSubmitImport.innerHTML = '<i class="bi bi-upload"></i> Import';
                     Swal.fire({ icon: 'error', title: 'Gagal terhubung ke server' });
                 });
+        });
+    }
+
+    function showImportResult(result) {
+        const hasErrors = result.errors && result.errors.length > 0;
+
+        if (! hasErrors) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Import selesai',
+                text: `${result.created} peserta berhasil diimport.`,
+            }).then(() => {
+                window.location.href = `${APP.baseUrl}grievance/quisioner?selected=${result.master_id}`;
+            });
+            return;
+        }
+
+        // Ada baris yang gagal — tampilkan detail row + alasan, jangan cuma diam-diam di-skip.
+        const rowsHtml = result.errors.map(e => `
+            <tr>
+                <td style="padding:.4rem .6rem;border-bottom:1px solid #f0f2f7;font-weight:700;white-space:nowrap">Baris ${e.row}</td>
+                <td style="padding:.4rem .6rem;border-bottom:1px solid #f0f2f7;text-align:left">${e.reason}</td>
+            </tr>
+        `).join('');
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Import selesai dengan beberapa error',
+            width: 560,
+            html: `
+                <p style="font-size:.85rem;margin-bottom:1rem">
+                    <strong>${result.created}</strong> peserta berhasil diimport,
+                    <strong style="color:#f5365c">${result.errors.length}</strong> baris gagal.
+                </p>
+                <div style="max-height:260px;overflow-y:auto;border:1px solid #f0f2f7;border-radius:.5rem">
+                    <table style="width:100%;border-collapse:collapse;font-size:.75rem">
+                        <thead>
+                            <tr style="background:#f8f9fe">
+                                <th style="padding:.5rem .6rem;text-align:left">Baris</th>
+                                <th style="padding:.5rem .6rem;text-align:left">Alasan</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+            `,
+            confirmButtonText: 'Lanjut ke Hasil Import',
+        }).then(() => {
+            window.location.href = `${APP.baseUrl}grievance/quisioner?selected=${result.master_id}`;
         });
     }
 
@@ -150,38 +193,33 @@
         });
     }
 
-    function renderScoreChart(participants) {
-        const canvas = document.getElementById('quizScoreChart');
+        const distColors = ['#f5365c', '#fb6340', '#fbb140', '#2dce89', '#11cdef'];
+    // 0-59=merah, 60-69=oranye, 70-79=kuning, 80-89=hijau, 90-100=biru — makin ke kanan makin baik
+
+    function renderDistributionChart(canvasId, distribution) {
+        const canvas = document.getElementById(canvasId);
         destroyIfExists(canvas);
 
         new Chart(canvas, {
-            type: 'bar',
+            type: 'pie',
             data: {
-                labels: participants.map(p => p.name),
-                datasets: [
-                    {
-                        label: 'Pretest',
-                        data: participants.map(p => Number(p.pretest)),
-                        backgroundColor: '#11cdef',
-                        borderRadius: 5,
-                    },
-                    {
-                        label: 'Posttest',
-                        data: participants.map(p => Number(p.posttest)),
-                        backgroundColor: '#5e72e4',
-                        borderRadius: 5,
-                    },
-                ]
+                labels: distribution.labels,
+                datasets: [{
+                    data: distribution.data,
+                    backgroundColor: distColors,
+                    borderWidth: 0,
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
-                },
-                scales: {
-                    y: { beginAtZero: true, max: 100, ticks: { precision: 0 }, grid: { color: '#f0f2f7' } },
-                    x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+                    legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.label}: ${ctx.parsed} orang`
+                        }
+                    }
                 }
             }
         });
@@ -224,10 +262,10 @@
         fetch(`${APP.baseUrl}grievance/quisioner/data/${masterId}`)
             .then(res => res.json())
             .then(data => {
-                renderPassChart(data.summary);
-                renderScoreChart(data.participants);
-                renderTable(data.participants, data.passing_score);
-
+               renderPassChart(data.summary);
+renderDistributionChart('quizPretestChart', data.pretest_distribution);
+renderDistributionChart('quizPosttestChart', data.posttest_distribution);
+renderTable(data.participants, data.passing_score);
                 document.getElementById('quizAvgLabel').textContent =
                     `Rata-rata Pretest: ${data.summary.avg_pretest} · Posttest: ${data.summary.avg_posttest}`;
             })
