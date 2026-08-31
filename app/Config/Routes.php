@@ -60,6 +60,12 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('export/suggestion-form', 'ReportController::exportSuggestionForm');
     });
 });
+$routes->get('lapor', 'PublicSubmissionController::form');
+$routes->post('lapor/submit', 'PublicSubmissionController::submit', ['filter' => 'honeypot']);
+$routes->group('grievance', ['filter' => 'auth:admin'], function ($routes) {
+    $routes->get('qr-poster', 'QrCodeController::poster');
+    $routes->get('qr-poster/image', 'QrCodeController::image');
+});
 $routes->group('grievance/import', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('/', 'ImportController::index');
     $routes->post('process', 'ImportController::process');

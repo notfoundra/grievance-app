@@ -52,28 +52,30 @@
         if (existing) existing.destroy();
     }
 
-    function buildQuery() {
-        const params = new URLSearchParams();
+   function buildQuery() {
+    const params = new URLSearchParams();
 
-        if (isAdmin) {
-            const site = document.getElementById('dashSite').value;
-            if (site) params.set('site_id', site);
-        }
-
-        const dateFrom = document.getElementById('dashDateFrom').value;
-        const dateTo = document.getElementById('dashDateTo').value;
-        const status = document.getElementById('dashStatus').value;
-        const type = document.getElementById('dashType').value;
-        const dept = document.getElementById('dashDept').value;
-
-        if (dateFrom) params.set('date_from', dateFrom);
-        if (dateTo) params.set('date_to', dateTo);
-        if (status) params.set('status_id', status);
-        if (type) params.set('case_type_id', type);
-        if (dept) params.set('department_id', dept);
-
-        return params.toString();
+    if (isAdmin) {
+        const site = document.getElementById('dashSite').value;
+        if (site) params.set('site_id', site);
     }
+
+    const dateFrom = document.getElementById('dashDateFrom').value;
+    const dateTo = document.getElementById('dashDateTo').value;
+    const status = document.getElementById('dashStatus').value;
+    const type = document.getElementById('dashType').value;
+    const dept = document.getElementById('dashDept').value;
+    const gender = document.getElementById('dashGender').value;
+
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
+    if (status) params.set('status_id', status);
+    if (type) params.set('case_type_id', type);
+    if (dept) params.set('department_id', dept);
+    if (gender) params.set('gender', gender);
+
+    return params.toString();
+}
 
     function renderKpis(summary) {
         const cards = [
@@ -157,39 +159,63 @@ console.log(labels);
         });
     }
 
-    function renderCaseType(caseType) {
-        console.log(caseType);
-        const canvas = document.getElementById('caseTypeChart');
-        destroyIfExists(canvas);
+   function renderCaseType(caseType) {
+    const canvas = document.getElementById('caseTypeChart');
+    const legendEl = document.getElementById('caseTypeLegend');
+    destroyIfExists(canvas);
 
-        if (!caseType.labels.length) {
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-            return;
-        }
+    if (!caseType.labels.length) {
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        legendEl.innerHTML = '<div class="donut-legend-empty">No data for this period.</div>';
+        return;
+    }
 
-        new Chart(canvas, {
-            type: 'doughnut',
-            data: {
-                labels: caseType.label,
-                datasets: [{
-                    data: caseType.data,
-                    backgroundColor: palette,
-                    borderWidth: 0,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '68%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 8, font: { size: 10 } }
+    const total = caseType.data.reduce((a, b) => a + b, 0);
+
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: caseType.labels,
+            datasets: [{
+                data: caseType.data,
+                backgroundColor: palette,
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: { display: false }, // pakai legend custom di samping, bukan bawaan Chart.js
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const value = ctx.parsed;
+                            const pct = total ? ((value / total) * 100).toFixed(1) : 0;
+                            return `${ctx.label}: ${value} case (${pct}%)`;
+                        }
                     }
                 }
             }
-        });
-    }
+        }
+    });
+
+    // Legend custom di samping chart — nama case type gak kepotong walau panjang
+    legendEl.innerHTML = caseType.labels.map((label, i) => {
+        const value = caseType.data[i];
+        const pct = total ? ((value / total) * 100).toFixed(1) : 0;
+        const color = palette[i % palette.length];
+
+        return `
+            <div class="donut-legend-item" title="${label}">
+                <span class="dot" style="background:${color}"></span>
+                <span class="name">${label}</span>
+                <span class="count">${value} (${pct}%)</span>
+            </div>
+        `;
+    }).join('');
+}
 
     function renderSatisfaction(satisfaction) {
         const canvas = document.getElementById('satisfactionChart');
@@ -284,21 +310,22 @@ console.log(labels);
     }
 
     function bindFilters() {
-        const ids = ['dashDateFrom', 'dashDateTo', 'dashStatus', 'dashType', 'dashDept'];
-        if (isAdmin) ids.unshift('dashSite');
+    const ids = ['dashDateFrom', 'dashDateTo', 'dashStatus', 'dashType', 'dashDept', 'dashGender'];
+    if (isAdmin) ids.unshift('dashSite');
 
-        ids.forEach(id => document.getElementById(id).addEventListener('change', loadDashboard));
+    ids.forEach(id => document.getElementById(id).addEventListener('change', loadDashboard));
 
-        document.getElementById('resetDash').addEventListener('click', () => {
-            if (isAdmin) document.getElementById('dashSite').value = '';
-            document.getElementById('dashDateFrom').value = defaultDateFrom();
-            document.getElementById('dashDateTo').value = defaultDateTo();
-            document.getElementById('dashStatus').value = '';
-            document.getElementById('dashType').value = '';
-            document.getElementById('dashDept').value = '';
-            loadDashboard();
-        });
-    }
+    document.getElementById('resetDash').addEventListener('click', () => {
+        if (isAdmin) document.getElementById('dashSite').value = '';
+        document.getElementById('dashDateFrom').value = defaultDateFrom();
+        document.getElementById('dashDateTo').value = defaultDateTo();
+        document.getElementById('dashStatus').value = '';
+        document.getElementById('dashType').value = '';
+        document.getElementById('dashDept').value = '';
+        document.getElementById('dashGender').value = '';
+        loadDashboard();
+    });
+}
 
     function initDefaults() {
         document.getElementById('dashDateFrom').value = defaultDateFrom();

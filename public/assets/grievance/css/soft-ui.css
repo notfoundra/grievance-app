@@ -173,10 +173,9 @@ body{
 .field-static i{color:var(--su-primary)}
 
 /* ============ CHART WRAPPERS ============ */
-.dashboard-grid{display:grid;grid-template-columns:1.45fr .95fr .9fr;gap:1.1rem;margin-bottom:1.1rem}
-.bottom-grid{display:grid;grid-template-columns:.85fr 1.4fr .8fr;gap:1.1rem}
+.dashboard-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-bottom:1.1rem}
 .chart-card{padding:1.1rem 1.25rem;min-height:280px}
-.chart-wrapper{position:relative;height:210px}
+.chart-wrapper{position:relative;height:230px}
 .donut-wrapper{height:200px}
 .recent,.alerts{padding:1.1rem 1.25rem}
 
@@ -191,14 +190,8 @@ body{
 
 .empty-state{padding:2rem 1rem;text-align:center;color:var(--su-muted);font-size:.78rem}
 
-@media(max-width:1200px){
-  .dashboard-grid{grid-template-columns:1fr 1fr}
-  .dashboard-grid>:last-child{grid-column:1/-1}
-  .bottom-grid{grid-template-columns:1fr 1fr}
-  .bottom-grid>:last-child{grid-column:1/-1}
-}
 @media(max-width:900px){
-  .dashboard-grid,.bottom-grid{grid-template-columns:1fr}
+  .dashboard-grid-2{grid-template-columns:1fr}
   .filterbar{gap:.6rem}
   .field{min-width:0;width:100%}
 }
@@ -542,3 +535,23 @@ table.dataTable tbody tr:hover{background:#f8f9fe}
 
 @media(max-width:1100px){.quiz-charts-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.quiz-charts-grid{grid-template-columns:1fr}}
+/* ============ CASE TYPE DONUT — custom side legend ============ */
+.donut-flex{display:flex;align-items:center;gap:1rem;height:210px}
+.donut-canvas-wrap{flex:0 0 160px;height:160px;position:relative}
+.donut-legend{
+  flex:1;min-width:0;overflow-y:auto;max-height:200px;
+  display:flex;flex-direction:column;gap:.55rem;padding-right:.25rem;
+}
+.donut-legend-item{display:flex;align-items:center;gap:.5rem;font-size:.7rem;cursor:default}
+.donut-legend-item .dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.donut-legend-item .name{
+  flex:1;color:var(--su-dark);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;min-width:0;
+}
+.donut-legend-item .count{font-weight:700;color:var(--su-muted);flex-shrink:0}
+.donut-legend-empty{font-size:.72rem;color:var(--su-muted);text-align:center;padding:1rem 0}
+
+@media(max-width:640px){
+  .donut-flex{flex-direction:column;height:auto}
+  .donut-canvas-wrap{flex:0 0 auto}
+}

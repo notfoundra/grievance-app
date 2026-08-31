@@ -61,16 +61,23 @@
             <?php endforeach; ?>
         </select>
     </div>
+    <div class="field">
+        <label>Gender</label>
+        <select id="dashGender">
+            <option value="">All Genders</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+    </div>
 
     <button class="btn btn-soft" id="resetDash">
         <i class="bi bi-arrow-counterclockwise"></i> Reset
     </button>
-
 </div>
 
 <div class="kpis" id="kpiGrid"></div>
 
-<div class="dashboard-grid">
+<div class="dashboard-grid-2">
 
     <div class="chart-card card">
         <div class="card-title">
@@ -103,14 +110,13 @@
                 <small>Distribution</small>
             </div>
         </div>
-        <div class="chart-wrapper donut-wrapper">
-            <canvas id="caseTypeChart"></canvas>
+        <div class="donut-flex">
+            <div class="donut-canvas-wrap">
+                <canvas id="caseTypeChart"></canvas>
+            </div>
+            <div class="donut-legend" id="caseTypeLegend"></div>
         </div>
     </div>
-
-</div>
-
-<div class="bottom-grid">
 
     <div class="chart-card card">
         <div class="card-title">

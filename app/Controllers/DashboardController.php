@@ -19,7 +19,6 @@ class DashboardController extends BaseController
         $dateFrom = $this->request->getGet('date_from');
         $dateTo   = $this->request->getGet('date_to');
 
-        // Default: 6 bulan terakhir, biar gak narik seluruh histori tiap dashboard dibuka
         if (empty($dateFrom) || empty($dateTo)) {
             $dateFrom = date('Y-m-01', strtotime('-5 months'));
             $dateTo   = date('Y-m-d');
@@ -32,6 +31,7 @@ class DashboardController extends BaseController
             'department_id' => $this->request->getGet('department_id'),
             'status_id'     => $this->request->getGet('status_id'),
             'case_type_id'  => $this->request->getGet('case_type_id'),
+            'gender'        => $this->request->getGet('gender'),
         ];
 
         return $this->response->setJSON(

@@ -16,6 +16,7 @@ $menus = [
     ['segment' => 'master-data', 'url' => 'grievance/master-data', 'icon' => 'bi-database',    'label' => 'Master Data', 'roles' => ['admin']],
     ['segment' => 'user',     'url' => 'user',      'icon' => 'bi-people',         'label' => 'User',       'roles' => ['admin']],
     // ['segment' => 'settings',  'url' => 'grievance/settings',   'icon' => 'bi-gear',           'label' => 'Settings',    'roles' => ['admin']],
+    ['segment' => 'qr-poster', 'url' => 'grievance/qr-poster', 'icon' => 'bi-qr-code', 'label' => 'QR Formulir', 'roles' => ['admin']],
 ];
 
 ?>

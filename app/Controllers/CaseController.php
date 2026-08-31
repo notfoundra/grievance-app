@@ -16,10 +16,12 @@ use App\Models\MasterStatusModel;
 class CaseController extends BaseController
 {
     protected $caseModel;
+    protected \App\Libraries\AttachmentHandler $attachments;
 
     public function __construct()
     {
         $this->caseModel = new GrievanceCaseModel();
+        $this->attachments = new \App\Libraries\AttachmentHandler();
     }
 
     public function ajaxList()
@@ -138,7 +140,7 @@ class CaseController extends BaseController
         }
 
         $files      = $this->request->getFileMultiple('attachment') ?? [];
-        $fileErrors = $this->validateAttachments($files);
+        $fileErrors = $this->attachments->validate($files);
 
         if (! empty($fileErrors)) {
             return $this->response->setStatusCode(422)->setJSON([
@@ -151,7 +153,7 @@ class CaseController extends BaseController
 
         $id = $model->createCase($this->request, $forcedSiteId);
 
-        $this->storeAttachments($id, $files);
+        $this->attachments->store($id, $files);
 
         $case = $model->find($id);
 
@@ -265,7 +267,7 @@ class CaseController extends BaseController
             'updated_by' => current_user()['name'] ?? 'System',
         ], true);
 
-        $this->storeAttachments((int) $id, $files, (int) $updateId);
+        $this->attachments->store((int) $id, $files, (int) $updateId);
 
         // Sinkronkan status_id case + isi response_date/closed_date otomatis
         $newStatusId  = (int) $this->request->getPost('status_id');
@@ -290,64 +292,6 @@ class CaseController extends BaseController
         ]);
     }
 
-    private function validateAttachments(array $files): array
-    {
-        $allowedExt = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
-        $maxSize    = 5 * 1024 * 1024; // 5 MB
-        $errors     = [];
-
-        foreach ($files as $file) {
-            if (! $file->isValid()) {
-                continue; // empty slot, nothing was actually attached
-            }
-
-            $ext = strtolower($file->getClientExtension());
-
-            if (! in_array($ext, $allowedExt, true)) {
-                $errors[] = "{$file->getClientName()}: file type not allowed.";
-            }
-
-            if ($file->getSize() > $maxSize) {
-                $errors[] = "{$file->getClientName()}: file exceeds 5 MB.";
-            }
-        }
-
-        return $errors;
-    }
-
-    private function storeAttachments(int $caseId, array $files): void
-    {
-        if (empty($files)) {
-            return;
-        }
-
-        $attachmentModel = new GrievanceAttachmentModel();
-        $uploadPath       = WRITEPATH . 'uploads/grievance/' . $caseId;
-
-        if (! is_dir($uploadPath)) {
-            mkdir($uploadPath, 0755, true);
-        }
-
-        foreach ($files as $file) {
-            if (! $file->isValid() || $file->hasMoved()) {
-                continue;
-            }
-
-            $storedName = $file->getRandomName();
-            $file->move($uploadPath, $storedName);
-
-            $attachmentModel->insert([
-                'case_id'       => $caseId,
-                'update_id'     => null,
-                'original_name' => $file->getClientName(),
-                'stored_name'   => $storedName,
-                'file_path'     => 'uploads/grievance/' . $caseId . '/' . $storedName,
-                'extension'     => $file->getClientExtension(),
-                'mime_type'     => $file->getClientMimeType(),
-                'file_size'     => $file->getSize(),
-            ]);
-        }
-    }
 
     // Serves the file only through this controller — never expose writable/ publicly.
     public function downloadAttachment($attachmentId)
