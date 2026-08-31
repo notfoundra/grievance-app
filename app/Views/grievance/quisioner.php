@@ -9,12 +9,7 @@
     </div>
 
     <div class="detail-action">
-        <a href="<?= site_url('grievance/quisioner/downloadTemplate') ?>" class="btn btn-success">
 
-            <i class="bi bi-file-earmark-excel"></i>Download Template</a>
-        <button type="button" class="btn btn-primary" id="btnOpenFollowUp">
-            <i class="bi bi-chat-left-text"></i> Follow Up
-        </button>
         <button type="button" class="btn btn-primary" id="btnOpenImportQuiz">
             <i class="bi bi-upload"></i> Import Quisioner
         </button>
@@ -156,6 +151,12 @@
             <div class="modal-body">
 
                 <div class="form-group mb-3">
+                    <a href="<?= base_url('assets/templates/formatimportgesat.xlsx') ?>" download class="btn btn-soft btn-sm" style="text-decoration:none;display:inline-flex">
+                        <i class="bi bi-download"></i> Download Template Excel
+                    </a>
+                    <span class="hint" style="display:block;margin-top:.4rem">Gunakan format ini agar kolom terbaca dengan benar saat import.</span>
+                </div>
+                <div class="form-group mb-3">
                     <label>Judul Quisioner <span style="color:var(--su-danger)">*</span></label>
                     <input type="text" name="title" maxlength="30" required placeholder="Contoh: Training K3 Batch 1">
                     <span class="hint">Maksimal 30 karakter.</span>
@@ -166,6 +167,7 @@
                     <input type="text" name="description" maxlength="30" placeholder="Contoh: Juli 2026">
                     <span class="hint">Maksimal 30 karakter, harus unik (belum pernah dipakai sebelumnya).</span>
                 </div>
+
 
                 <label class="upload-box" id="quizDropArea">
                     <i class="bi bi-file-earmark-excel"></i>
