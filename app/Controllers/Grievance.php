@@ -13,6 +13,7 @@ use App\Models\MasterCaseTypeModel;
 use App\Models\MasterStatusModel;
 use App\Models\MasterPriorityModel;
 use App\Models\UserModel;
+use App\Models\MasterChannelModel;
 
 class Grievance extends BaseController
 {
@@ -33,6 +34,7 @@ class Grievance extends BaseController
         $deptModel     = new MasterDepartmentModel();
         $caseTypeModel = new MasterCaseTypeModel();
         $statusModel   = new MasterStatusModel();
+        $channelModel  = new MasterChannelModel();
 
         $sites = $siteModel->where('is_active', 1)->findAll();
 
@@ -45,6 +47,7 @@ class Grievance extends BaseController
             'departments' => $deptModel->where('is_active', 1)->orderBy('name')->findAll(),
             'caseTypes'   => $caseTypeModel->where('is_active', 1)->orderBy('name')->findAll(),
             'statuses'    => $statusModel->where('is_active', 1)->orderBy('sort_order')->findAll(),
+            'channels'    => $channelModel->where('is_active', 1)->orderBy('name')->findAll(),
         ];
 
         return view('grievance/index', $data);

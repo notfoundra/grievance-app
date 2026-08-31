@@ -156,6 +156,10 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('gender', $filter['gender']);
         }
 
+        if (!empty($filter['channel_id'])) {
+            $builder->where('channel_id', $filter['channel_id']);
+        }
+
         return $builder;
     }
     public function getDashboardSummary(array $filter = []): array
@@ -279,6 +283,10 @@ class GrievanceCaseModel extends BaseModel
             $builder->where('gc.gender', $filter['gender']);
         }
 
+        if (!empty($filter['channel_id'])) {
+            $builder->where('gc.channel_id', $filter['channel_id']);
+        }
+
         $departmentRows = $builder
             ->groupBy('gc.department_id')
             ->orderBy('total', 'DESC')
@@ -328,6 +336,10 @@ class GrievanceCaseModel extends BaseModel
 
         if (!empty($filter['gender'])) {
             $builder->where('gc.gender', $filter['gender']);
+        }
+
+        if (!empty($filter['channel_id'])) {
+            $builder->where('gc.channel_id', $filter['channel_id']);
         }
 
         $typeRows = $builder

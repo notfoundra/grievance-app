@@ -70,6 +70,16 @@
         </select>
     </div>
 
+    <div class="field">
+        <label>Channel</label>
+        <select id="dashChannel">
+            <option value="">All Channels</option>
+            <?php foreach ($channels as $channel) : ?>
+                <option value="<?= $channel['id'] ?>"><?= esc($channel['name']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
     <button class="btn btn-soft" id="resetDash">
         <i class="bi bi-arrow-counterclockwise"></i> Reset
     </button>

@@ -66,6 +66,7 @@
     const type = document.getElementById('dashType').value;
     const dept = document.getElementById('dashDept').value;
     const gender = document.getElementById('dashGender').value;
+    const channel = document.getElementById('dashChannel').value;
 
     if (dateFrom) params.set('date_from', dateFrom);
     if (dateTo) params.set('date_to', dateTo);
@@ -73,10 +74,10 @@
     if (type) params.set('case_type_id', type);
     if (dept) params.set('department_id', dept);
     if (gender) params.set('gender', gender);
+    if (channel) params.set('channel_id', channel);
 
     return params.toString();
 }
-
     function renderKpis(summary) {
         const cards = [
             ['Total Cases', summary.total, 'bi-clipboard-data', 'linear-gradient(135deg,#5e72e4,#324cdd)'],
@@ -309,8 +310,8 @@ console.log(labels);
             });
     }
 
-    function bindFilters() {
-    const ids = ['dashDateFrom', 'dashDateTo', 'dashStatus', 'dashType', 'dashDept', 'dashGender'];
+   function bindFilters() {
+    const ids = ['dashDateFrom', 'dashDateTo', 'dashStatus', 'dashType', 'dashDept', 'dashGender', 'dashChannel'];
     if (isAdmin) ids.unshift('dashSite');
 
     ids.forEach(id => document.getElementById(id).addEventListener('change', loadDashboard));
@@ -323,6 +324,7 @@ console.log(labels);
         document.getElementById('dashType').value = '';
         document.getElementById('dashDept').value = '';
         document.getElementById('dashGender').value = '';
+        document.getElementById('dashChannel').value = '';
         loadDashboard();
     });
 }

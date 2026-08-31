@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\GrievanceCaseModel;
+use App\Models\MasterChannelModel;
 
 class DashboardController extends BaseController
 {
@@ -32,6 +33,7 @@ class DashboardController extends BaseController
             'status_id'     => $this->request->getGet('status_id'),
             'case_type_id'  => $this->request->getGet('case_type_id'),
             'gender'        => $this->request->getGet('gender'),
+            'channel_id'    => $this->request->getGet('channel_id'),
         ];
 
         return $this->response->setJSON(
