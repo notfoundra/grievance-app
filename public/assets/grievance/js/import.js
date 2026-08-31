@@ -52,9 +52,10 @@
 
         btnImport.disabled = true;
         btnImport.innerHTML = '<i class="bi bi-hourglass-split"></i> Memproses... (bisa beberapa menit untuk file besar)';
-
+        const  channel = document.getElementById('channel_id').value;
         const fd = new FormData();
         fd.append('wovo_file', selectedFile);
+        fd.append('channel_id', channel);
         fd.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
 
         fetch(`${APP.baseUrl}grievance/import/process`, {

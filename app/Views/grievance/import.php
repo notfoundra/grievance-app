@@ -14,15 +14,17 @@
 
 <div class="card form-card mb-4">
     <div class="form-group">
-        <label>Channels <span style="color:var(--su-danger)">*</span></label>
-        <select name="source" required>
-            <option value="">Select Channel</option>
-
-            <option value="wovo_import">Wovo</option>
-            <option value="suggestion_box">Suggestion Box</option>
-
+        <label>Channel</label>
+        <select name="channel_id" id="channel_id">
+            <option value="">Auto-detect dari Excel (App/SMS)</option>
+            <?php foreach ($channels as $c) : ?>
+                <option value="<?= $c['id'] ?>"><?= esc($c['name']) ?></option>
+            <?php endforeach; ?>
         </select>
-        <span class="error-text">Site is required.</span>
+        <span class="hint" style="display:block;margin-top:.4rem">
+            Biarkan "Auto-detect" untuk deteksi otomatis per baris dari kolom "Channel Used" di file Excel.
+            Pilih salah satu untuk memaksa semua case hasil import memakai channel tersebut.
+        </span>
     </div>
     <label class="upload-box" id="dropArea">
         <i class="bi bi-file-earmark-excel"></i>

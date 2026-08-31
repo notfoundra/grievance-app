@@ -3,25 +3,24 @@
 namespace App\Controllers;
 
 use App\Libraries\WovoImporter;
+use App\Models\MasterChannelModel;
 
 class ImportController extends BaseController
 {
     public function index()
     {
-        return view('grievance/import');
+        $channels = (new MasterChannelModel())->where('is_active', 1)->orderBy('name')->findAll();
+
+        return view('grievance/import', ['channels' => $channels]);
     }
 
     public function process()
     {
         $file = $this->request->getFile('wovo_file');
-        $source = $this->request->getPost('source');
-        return $this->response->setJSON([
-            'status' => false,
-            'message' => $source,
-        ]);
+
         if (! $file || ! $file->isValid()) {
             return $this->response->setStatusCode(422)->setJSON([
-                'status' => false,
+                'status'  => false,
                 'message' => 'File tidak valid atau belum dipilih.',
             ]);
         }
@@ -30,17 +29,19 @@ class ImportController extends BaseController
 
         if (! in_array($ext, ['xlsx', 'xls'], true)) {
             return $this->response->setStatusCode(422)->setJSON([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Format file harus .xlsx atau .xls',
             ]);
         }
+
+        $channelId = $this->request->getPost('channel_id') ?: null;
 
         $tmpPath = WRITEPATH . 'uploads/tmp_' . $file->getRandomName();
         $file->move(dirname($tmpPath), basename($tmpPath));
 
         try {
             $importer = new WovoImporter();
-            $result   = $importer->run($tmpPath);
+            $result   = $importer->run($tmpPath, $channelId ? (int) $channelId : null);
         } catch (\Throwable $e) {
             @unlink($tmpPath);
 

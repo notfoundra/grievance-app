@@ -52,10 +52,12 @@ class WovoImporter
         $this->sitesLoaded = $this->siteModel->findAll();
     }
 
-    public function run(string $filePath): array
+    public function run(string $filePath, ?int $forcedChannelId = null): array
     {
         ini_set('memory_limit', '512M');
         set_time_limit(0);
+
+
 
         $spreadsheet = IOFactory::load($filePath);
         $sheet       = $spreadsheet->getActiveSheet();
@@ -69,17 +71,21 @@ class WovoImporter
             $data = $this->readRow($sheet, $row);
 
             if ($data === null) {
-                continue; // baris kosong total
+                continue;
             }
 
             try {
-                $this->importRow($data, $row);
+                $this->importRow($data, $row, $forcedChannelId);
             } catch (\Throwable $e) {
                 $this->errors[] = ['row' => $row, 'reason' => $e->getMessage()];
             }
         }
 
         $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            throw new \RuntimeException('Transaksi database gagal di-commit. Cek log aplikasi untuk detail.');
+        }
 
         return [
             'created'           => $this->created,
@@ -118,7 +124,7 @@ class WovoImporter
         ];
     }
 
-    protected function importRow(array $r, int $row): void
+    protected function importRow(array $r, int $row, ?int $forcedChannelId = null): void
     {
         // ---------- Filter: skip case type tertentu (mis. Junk) ----------
         foreach ($this->config->skipCaseTypes as $skip) {
@@ -171,8 +177,12 @@ class WovoImporter
         $messageTypeId   = $this->findOrCreate($this->messageTypeModel, $messageTypeName);
 
         // ---------- Channel ----------
-        $channelName = $this->config->channelMap[strtolower($r['channel'])] ?? ($r['channel'] ?: 'WOVO App');
-        $channelId   = $this->findOrCreate($this->channelModel, $channelName);
+        if ($forcedChannelId !== null) {
+            $channelId = $forcedChannelId;
+        } else {
+            $channelName = $this->config->channelMap[strtolower($r['channel'])] ?? ($r['channel'] ?: 'WOVO App');
+            $channelId   = $this->findOrCreate($this->channelModel, $channelName);
+        }
 
         // ---------- Status ----------
         $statusName = $this->config->statusMap[strtolower($r['case_status'])] ?? $this->config->defaultStatus;
