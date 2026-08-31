@@ -14,7 +14,11 @@ class ImportController extends BaseController
     public function process()
     {
         $file = $this->request->getFile('wovo_file');
-
+        $source = $this->request->getPost('source');
+        return $this->response->setJSON([
+            'status' => false,
+            'message' => $source,
+        ]);
         if (! $file || ! $file->isValid()) {
             return $this->response->setStatusCode(422)->setJSON([
                 'status' => false,

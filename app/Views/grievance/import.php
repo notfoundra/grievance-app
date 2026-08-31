@@ -13,7 +13,17 @@
 </div>
 
 <div class="card form-card mb-4">
+    <div class="form-group">
+        <label>Channels <span style="color:var(--su-danger)">*</span></label>
+        <select name="source" required>
+            <option value="">Select Channel</option>
 
+            <option value="wovo_import">Wovo</option>
+            <option value="suggestion_box">Suggestion Box</option>
+
+        </select>
+        <span class="error-text">Site is required.</span>
+    </div>
     <label class="upload-box" id="dropArea">
         <i class="bi bi-file-earmark-excel"></i>
         <strong>Drag & Drop file Excel WOVO, atau klik untuk browse</strong>
