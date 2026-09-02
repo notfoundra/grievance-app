@@ -36,6 +36,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('case-detail/(:num)', 'CaseController::caseDetail/$1');
         $routes->post('case-detail/(:num)/update', 'CaseController::update/$1');
         $routes->post('case-detail/(:num)/follow-up', 'CaseController::addUpdate/$1');
+        $routes->post('case-detail/(:num)/delete', 'CaseController::delete/$1');
         $routes->get('new', 'CaseController::newCase');
         $routes->post('store', 'CaseController::store');
         $routes->get('attachment/(:num)', 'CaseController::downloadAttachment/$1');

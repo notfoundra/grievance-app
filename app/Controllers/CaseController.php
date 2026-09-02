@@ -306,4 +306,26 @@ class CaseController extends BaseController
             ->download(WRITEPATH . $attachment['file_path'], null)
             ->setFileName($attachment['original_name']);
     }
+    public function delete($id)
+    {
+        $case = $this->caseModel->find($id);
+
+        if (! $case || ! user_owns_site($case['site_id'])) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        if (! has_role(\App\Models\UserModel::ROLE_ADMIN)) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status'  => false,
+                'message' => 'Hanya admin yang dapat menghapus case.',
+            ]);
+        }
+
+        $this->caseModel->delete($id);
+
+        return $this->response->setJSON([
+            'status'  => true,
+            'message' => 'Case berhasil dihapus.',
+        ]);
+    }
 }

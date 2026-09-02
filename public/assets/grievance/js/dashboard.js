@@ -247,7 +247,7 @@ console.log(labels);
 
     function renderRecent(recent) {
         const body = document.getElementById('recentBody');
-
+console.log(recent)
         if (!recent.length) {
             body.innerHTML = `<tr><td colspan="6" class="empty-state">No cases found.</td></tr>`;
             return;

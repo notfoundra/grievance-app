@@ -71,9 +71,9 @@ class GrievanceCaseModel extends BaseModel
 
             ->join('master_statuses', 'master_statuses.id = grievance_cases.status_id', 'left');
     }
-    public function getDatatable()
+    public function getDatatable(?int $siteId = null)
     {
-        return $this->db
+        $builder =  $this->db
             ->table('grievance_cases gc')
             ->select('
         gc.id,
@@ -92,9 +92,14 @@ class GrievanceCaseModel extends BaseModel
             ->join('master_case_types mc', 'mc.id=gc.case_type_id', 'left')
             ->join('master_priorities mp', 'mp.id=gc.priority_id', 'left')
             ->join('master_statuses ms', 'ms.id=gc.status_id', 'left')
-            ->join('master_message_types mt', 'mt.id=gc.message_type_id', 'left')
-            ->get()
-            ->getResultArray();
+            ->join('master_message_types mt', 'mt.id=gc.message_type_id', 'left');
+        if ($siteId) {
+            $builder->where('gc.site_id', $siteId);
+        }
+
+        $builder->where('gc.deleted_at IS NULL', null, false);
+
+        return $builder->get()->getResultArray();
     }
     public function getDetail($id)
     {
@@ -119,8 +124,8 @@ class GrievanceCaseModel extends BaseModel
             ->join('master_statuses mst', 'mst.id=gc.status_id', 'left')
             ->join('master_channels mch', 'mch.id=gc.channel_id', 'left')
             ->join('master_message_types mt', 'mt.id=gc.message_type_id', 'left')
-
             ->where('gc.id', $id)
+            ->where('gc.deleted_at IS NULL', null, false)
 
             ->get()
 
@@ -128,6 +133,7 @@ class GrievanceCaseModel extends BaseModel
     }
     private function applyFilter($builder, array $filter)
     {
+        $builder->where('deleted_at IS NULL', null, false);
         if (!empty($filter['site_id'])) {
             $builder->where('site_id', $filter['site_id']);
         }
@@ -286,7 +292,7 @@ class GrievanceCaseModel extends BaseModel
         if (!empty($filter['channel_id'])) {
             $builder->where('gc.channel_id', $filter['channel_id']);
         }
-
+        $builder->where('gc.deleted_at IS NULL', null, false);
         $departmentRows = $builder
             ->groupBy('gc.department_id')
             ->orderBy('total', 'DESC')
@@ -341,7 +347,7 @@ class GrievanceCaseModel extends BaseModel
         if (!empty($filter['channel_id'])) {
             $builder->where('gc.channel_id', $filter['channel_id']);
         }
-
+        $builder->where('gc.deleted_at IS NULL', null, false);
         $typeRows = $builder
             ->groupBy('gc.case_type_id')
             ->orderBy('total', 'DESC')
@@ -365,6 +371,7 @@ class GrievanceCaseModel extends BaseModel
 
         $builder = $db->table('grievance_cases gc')
             ->select('
+            gc.id,
             gc.case_number,
             md.name AS department,
             mc.name AS case_type,
@@ -581,6 +588,9 @@ class GrievanceCaseModel extends BaseModel
             ->join('master_priorities mp', 'mp.id = gc.priority_id', 'left')
             ->join('master_statuses ms', 'ms.id = gc.status_id', 'left');
 
+
+        $builder->where('gc.deleted_at IS NULL', null, false);
+
         if (! empty($filter['site_id'])) {
             $builder->where('gc.site_id', $filter['site_id']);
         }
@@ -648,8 +658,8 @@ class GrievanceCaseModel extends BaseModel
             ->join('master_priorities mp', 'mp.id = gc.priority_id', 'left')
             ->join('master_statuses mst', 'mst.id = gc.status_id', 'left')
             ->where('YEAR(gc.received_date)', $year)
-            ->where('MONTH(gc.received_date)', $month);
-
+            ->where('MONTH(gc.received_date)', $month)
+            ->where('gc.deleted_at IS NULL', null, false);
         if ($siteId) {
             $builder->where('gc.site_id', $siteId);
         }

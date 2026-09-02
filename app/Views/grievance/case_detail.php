@@ -13,6 +13,11 @@
     </div>
 
     <div class="detail-action">
+        <?php if (has_role('admin')) : ?>
+            <button type="button" class="btn btn-danger" id="btnDeleteCase">
+                <i class="bi bi-trash"></i> Delete Case
+            </button>
+        <?php endif; ?>
         <button type="button" class="btn btn-warning" id="btnOpenEdit">
             <i class="bi bi-pencil-square"></i> Edit Case
         </button>

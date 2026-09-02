@@ -116,4 +116,53 @@
     if (params.get('followup') === '1') {
         openModal('modalFollowUp');
     }
+        // ---------- Delete Case ----------
+    const btnDelete = document.getElementById('btnDeleteCase');
+
+    if (btnDelete) {
+        btnDelete.addEventListener('click', () => {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Hapus Case Ini?',
+                html: `
+                    Case ini akan disembunyikan dari Case Log, Dashboard, dan Follow Up Board.<br><br>
+                    Data tetap tersimpan di database untuk keperluan audit dan dapat dipulihkan
+                    oleh administrator sistem bila diperlukan.
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#f5365c',
+                reverseButtons: true,
+            }).then(result => {
+                if (! result.isConfirmed) return;
+
+                btnDelete.disabled = true;
+                btnDelete.innerHTML = '<i class="bi bi-hourglass-split"></i> Menghapus...';
+
+                fetch(`${APP.baseUrl}case/case-detail/${CASE_ID}/delete`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status) {
+                            Swal.fire({ icon: 'success', title: 'Case dihapus', timer: 1200, showConfirmButton: false })
+                                .then(() => {
+                                    window.location.href = `${APP.baseUrl}grievance/case-log`;
+                                });
+                        } else {
+                            btnDelete.disabled = false;
+                            btnDelete.innerHTML = '<i class="bi bi-trash"></i> Delete Case';
+                            Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Tidak dapat menghapus case.' });
+                        }
+                    })
+                    .catch(() => {
+                        btnDelete.disabled = false;
+                        btnDelete.innerHTML = '<i class="bi bi-trash"></i> Delete Case';
+                        Swal.fire({ icon: 'error', title: 'Gagal terhubung ke server' });
+                    });
+            });
+        });
+    }
 })();
