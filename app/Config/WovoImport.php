@@ -33,7 +33,7 @@ class WovoImport extends BaseConfig
         '2. WAGES AND INCENTIVES'                            => ['Wages & Incentives', 'HRD'],
         '3. BENEFITS'                                        => ['Benefits', 'HRD'],
         '4. GENERAL FACILITIES'                              => ['General Facilities', 'GA'],
-        '5.. HARASSMENT AND ABUSE'                           => ['Harassment & Abuse', 'HRD'],
+        '5. HARASSMENT AND ABUSE'                           => ['Harassment & Abuse', 'HRD'],
         '6. WORKING HOURS'                                   => ['Working Hours', 'HRD'],
         '7. PRODUCTION'                                      => ['Production', 'Production'],
         '8. RECRUITMENT AND CONTRACT'                        => ['Recruitment & Contract', 'HRD'],
