@@ -58,7 +58,7 @@ class QuisionerImporter
         $rowCount = 0;
 
         // Data peserta mulai baris 4 (baris 1-3 adalah header 2 tingkat).
-        for ($row = 4; $row <= $highestRow; $row++) {
+        for ($row = 6; $row <= $highestRow; $row++) {
 
             $name = trim((string) $sheet->getCell('C' . $row)->getCalculatedValue());
 
