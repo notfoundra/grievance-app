@@ -245,6 +245,10 @@
                         <label>Target Closure Date</label>
                         <input type="date" name="target_closure_date" value="<?= esc($case['target_closure_date']) ?>" required>
                     </div>
+                    <div class="form-group">
+                        <label>Received Date</label>
+                        <input type="date" name="target_closure_date" value="<?= esc($case['received_date']) ?>" required>
+                    </div>
 
                 </div>
 

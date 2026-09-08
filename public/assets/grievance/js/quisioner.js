@@ -71,7 +71,7 @@
         });
     }
 
-       if (formImport) {
+          if (formImport) {
         formImport.addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -103,6 +103,120 @@
                 .catch(() => {
                     btnSubmitImport.disabled = false;
                     btnSubmitImport.innerHTML = '<i class="bi bi-upload"></i> Import';
+                    Swal.fire({ icon: 'error', title: 'Gagal terhubung ke server' });
+                });
+        });
+    }
+
+    function showImportResult(result) {
+        const hasErrors = result.errors && result.errors.length > 0;
+        const hasDuplicates = result.skipped_duplicate > 0;
+
+        if (! hasErrors && ! hasDuplicates) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Import selesai',
+                text: `${result.created} peserta berhasil diimport.`,
+            }).then(() => {
+                window.location.href = `${APP.baseUrl}grievance/quisioner?selected=${result.master_id}`;
+            });
+            return;
+        }
+
+        let html = `
+            <p style="font-size:.85rem;margin-bottom:1rem">
+                <strong>${result.created}</strong> peserta berhasil diimport`;
+
+        if (hasDuplicates) {
+            html += `, <strong style="color:#fb6340">${result.skipped_duplicate}</strong> dilewati (nama sudah ada)`;
+        }
+
+        if (hasErrors) {
+            html += `, <strong style="color:#f5365c">${result.errors.length}</strong> baris gagal`;
+        }
+
+        html += `.</p>`;
+
+        if (hasErrors) {
+            const rowsHtml = result.errors.map(e => `
+                <tr>
+                    <td style="padding:.4rem .6rem;border-bottom:1px solid #f0f2f7;font-weight:700;white-space:nowrap">Baris ${e.row}</td>
+                    <td style="padding:.4rem .6rem;border-bottom:1px solid #f0f2f7;text-align:left">${e.reason}</td>
+                </tr>
+            `).join('');
+
+            html += `
+                <div style="max-height:260px;overflow-y:auto;border:1px solid #f0f2f7;border-radius:.5rem">
+                    <table style="width:100%;border-collapse:collapse;font-size:.75rem">
+                        <thead>
+                            <tr style="background:#f8f9fe">
+                                <th style="padding:.5rem .6rem;text-align:left">Baris</th>
+                                <th style="padding:.5rem .6rem;text-align:left">Alasan</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        Swal.fire({
+            icon: hasErrors ? 'warning' : 'success',
+            title: hasErrors ? 'Import selesai dengan beberapa error' : 'Import selesai',
+            width: 560,
+            html,
+            confirmButtonText: 'Lanjut ke Hasil Import',
+        }).then(() => {
+            window.location.href = `${APP.baseUrl}grievance/quisioner?selected=${result.master_id}`;
+        });
+    }
+
+    // ================= ADD QUISIONER MODAL =================
+
+    const btnOpenAddQuiz = document.getElementById('btnOpenAddQuiz');
+    const modalAddQuiz    = document.getElementById('modalAddQuiz');
+    const formAddQuiz      = document.getElementById('formAddQuiz');
+
+    if (btnOpenAddQuiz) {
+        btnOpenAddQuiz.addEventListener('click', () => openModal(modalAddQuiz));
+    }
+
+    if (modalAddQuiz) {
+        modalAddQuiz.querySelectorAll('[data-close]').forEach(btn => {
+            btn.addEventListener('click', () => closeModal(modalAddQuiz));
+        });
+
+        modalAddQuiz.addEventListener('click', e => {
+            if (e.target === modalAddQuiz) closeModal(modalAddQuiz);
+        });
+    }
+
+    if (formAddQuiz) {
+        formAddQuiz.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('btnSubmitAddQuiz');
+            btn.disabled = true;
+
+            const fd = new FormData(formAddQuiz);
+
+            fetch(`${APP.baseUrl}grievance/quisioner/store`, {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status) {
+                        window.location.href = `${APP.baseUrl}grievance/quisioner?selected=${data.master_id}`;
+                    } else {
+                        btn.disabled = false;
+                        const errors = data.errors ? Object.values(data.errors).flat().join('<br>') : 'Gagal menyimpan.';
+                        Swal.fire({ icon: 'error', title: 'Gagal', html: errors });
+                    }
+                })
+                .catch(() => {
+                    btn.disabled = false;
                     Swal.fire({ icon: 'error', title: 'Gagal terhubung ke server' });
                 });
         });

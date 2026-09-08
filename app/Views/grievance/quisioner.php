@@ -9,12 +9,10 @@
     </div>
 
     <div class="detail-action">
-
         <button type="button" class="btn btn-primary" id="btnOpenImportQuiz">
-            <i class="bi bi-upload"></i> Import Quisioner
+            <i class="bi bi-upload"></i> Import Peserta
         </button>
     </div>
-
 
 </div>
 
@@ -48,7 +46,6 @@
         <div class="kpi-icon"><i class="bi bi-flag"></i></div>
     </div>
 </div>
-
 <div class="filterbar card mb-4">
     <div class="field" style="min-width:280px">
         <label>Pilih Quisioner</label>
@@ -62,6 +59,9 @@
             <?php endif; ?>
         </select>
     </div>
+    <button type="button" class="btn btn-soft" id="btnOpenAddQuiz" style="align-self:flex-end">
+        <i class="bi bi-plus-circle"></i> Quisioner Baru
+    </button>
 </div>
 
 <?php if (empty($list)) : ?>
@@ -148,12 +148,50 @@
     </div>
 
 <?php endif; ?>
-<!-- ===================== MODAL: IMPORT QUISIONER ===================== -->
+<!-- ===================== MODAL: QUISIONER BARU ===================== -->
+<div class="modal-overlay" id="modalAddQuiz">
+    <div class="modal-box modal-sm">
+
+        <div class="modal-header">
+            <h4><i class="bi bi-plus-circle"></i> Quisioner Baru</h4>
+            <button type="button" class="modal-close" data-close="modalAddQuiz"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <form id="formAddQuiz">
+
+            <div class="modal-body">
+
+                <div class="form-group mb-3">
+                    <label>Judul Quisioner <span style="color:var(--su-danger)">*</span></label>
+                    <input type="text" name="title" maxlength="30" required placeholder="Contoh: Training K3 Batch 1">
+                    <span class="hint">Maksimal 30 karakter.</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <input type="text" name="description" maxlength="30" placeholder="Contoh: Juli 2026">
+                    <span class="hint">Maksimal 30 karakter, harus unik.</span>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-close="modalAddQuiz">Batal</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmitAddQuiz">
+                    <i class="bi bi-check2"></i> Simpan
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+<!-- ===================== MODAL: IMPORT PESERTA ===================== -->
 <div class="modal-overlay" id="modalImportQuiz">
     <div class="modal-box modal-sm">
 
         <div class="modal-header">
-            <h4><i class="bi bi-upload"></i> Import Quisioner</h4>
+            <h4><i class="bi bi-upload"></i> Import Peserta</h4>
             <button type="button" class="modal-close" data-close="modalImportQuiz"><i class="bi bi-x-lg"></i></button>
         </div>
 
@@ -167,18 +205,19 @@
                     </a>
                     <span class="hint" style="display:block;margin-top:.4rem">Gunakan format ini agar kolom terbaca dengan benar saat import.</span>
                 </div>
-                <div class="form-group mb-3">
-                    <label>Judul Quisioner <span style="color:var(--su-danger)">*</span></label>
-                    <input type="text" name="title" maxlength="30" required placeholder="Contoh: Training K3 Batch 1">
-                    <span class="hint">Maksimal 30 karakter.</span>
-                </div>
 
                 <div class="form-group mb-3">
-                    <label>Deskripsi</label>
-                    <input type="text" name="description" maxlength="30" placeholder="Contoh: Juli 2026">
-                    <span class="hint">Maksimal 30 karakter, harus unik (belum pernah dipakai sebelumnya).</span>
+                    <label>Pilih Quisioner <span style="color:var(--su-danger)">*</span></label>
+                    <select name="master_quisioner_id" required>
+                        <option value="">-- Pilih Quisioner --</option>
+                        <?php foreach ($list as $m) : ?>
+                            <option value="<?= $m['id'] ?>"><?= esc($m['title']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php if (empty($list)) : ?>
+                        <span class="hint" style="color:var(--su-danger)">Belum ada quisioner. Klik "＋ Add" di dropdown atas halaman terlebih dahulu.</span>
+                    <?php endif; ?>
                 </div>
-
 
                 <label class="upload-box" id="quizDropArea">
                     <i class="bi bi-file-earmark-excel"></i>

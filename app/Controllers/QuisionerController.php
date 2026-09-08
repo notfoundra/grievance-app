@@ -146,15 +146,42 @@ class QuisionerController extends BaseController
             'data'   => array_values($buckets),
         ];
     }
+    /**
+     * Bikin sesi quisioner baru (master_quisioner) — terpisah dari proses import peserta.
+     */
+    public function store()
+    {
+        $rules = [
+            'title' => 'required|min_length[2]|max_length[30]',
+        ];
+
+        if (! $this->validate($rules)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => false,
+                'errors' => $this->validator->getErrors(),
+            ]);
+        }
+
+        $id = $this->master->insert([
+            'title'       => $this->request->getPost('title'),
+            'description' => $this->request->getPost('description'),
+        ], true);
+
+        return $this->response->setJSON([
+            'status'    => true,
+            'master_id' => $id,
+            'message'   => 'Quisioner berhasil dibuat.',
+        ]);
+    }
 
     /**
-     * Buat master quisioner baru + import peserta dari file Excel dalam satu langkah.
+     * Import peserta ke sesi quisioner yang sudah ada (dipilih user, bukan dibuat di sini).
      */
     public function import()
     {
         $rules = [
-            'title'     => 'required|min_length[2]|max_length[30]', // sesuai constraint kolom title VARCHAR(30)
-            'quiz_file' => 'uploaded[quiz_file]',
+            'master_quisioner_id' => 'required|integer|is_not_unique[master_quisioner.id]',
+            'quiz_file'            => 'uploaded[quiz_file]',
         ];
 
         if (! $this->validate($rules)) {
@@ -182,16 +209,13 @@ class QuisionerController extends BaseController
             ]);
         }
 
-        $tmpPath = WRITEPATH . 'uploads/tmp_quiz_' . $file->getRandomName();
+        $masterId = (int) $this->request->getPost('master_quisioner_id');
+        $tmpPath  = WRITEPATH . 'uploads/tmp_quiz_' . $file->getRandomName();
         $file->move(dirname($tmpPath), basename($tmpPath));
 
         try {
             $importer = new QuisionerImporter();
-            $result   = $importer->run(
-                $this->request->getPost('title'),
-                $this->request->getPost('description'),
-                $tmpPath
-            );
+            $result   = $importer->run($masterId, $tmpPath);
         } catch (\Throwable $e) {
             @unlink($tmpPath);
 
@@ -208,6 +232,10 @@ class QuisionerController extends BaseController
             'result' => $result,
         ]);
     }
+    /**
+     * Buat master quisioner baru + import peserta dari file Excel dalam satu langkah.
+     */
+
     public function downloadTemplate()
     {
         $filePath = WRITEPATH . 'uploads/formatimportgesat.xlsx';

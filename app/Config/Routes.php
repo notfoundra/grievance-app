@@ -24,6 +24,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('quisioner', 'QuisionerController::index');
         $routes->get('quisioner/data/(:num)', 'QuisionerController::data/$1');
         $routes->post('quisioner/import', 'QuisionerController::import');
+        $routes->post('quisioner/store', 'QuisionerController::store');
         $routes->get('quisioner/downloadTemplate', 'QuisionerController::downloadTemplate');
     });
 
