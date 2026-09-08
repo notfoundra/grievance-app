@@ -85,7 +85,17 @@
                 <canvas id="quizPassChart"></canvas>
             </div>
         </div>
-
+        <div class="chart-card card">
+            <div class="card-title">
+                <div>
+                    <h3>Distribusi Gender</h3>
+                    <small>Jumlah peserta</small>
+                </div>
+            </div>
+            <div class="chart-wrapper" style="height:230px">
+                <canvas id="quizGenderChart"></canvas>
+            </div>
+        </div>
         <div class="chart-card card">
             <div class="card-title">
                 <div>
@@ -124,6 +134,7 @@
                 <thead>
                     <tr>
                         <th>Nama Peserta</th>
+                        <th>Gender</th>
                         <th>Pretest</th>
                         <th>Posttest</th>
                         <th>Selisih</th>
@@ -172,7 +183,7 @@
                 <label class="upload-box" id="quizDropArea">
                     <i class="bi bi-file-earmark-excel"></i>
                     <strong>Pilih atau drag file Excel di sini</strong>
-                    <span>Kolom yang dibaca: Nama (B), Nilai Pretest (G), Nilai Posttest (J), Keterangan (K)</span>
+                    <span>Kolom yang dibaca: Nama (C), Gender (F), Nilai Pretest (I), Nilai Posttest (L), Keterangan (M)</span>
                     <input id="quizFileInput" type="file" name="quiz_file" hidden accept=".xlsx,.xls">
                 </label>
 

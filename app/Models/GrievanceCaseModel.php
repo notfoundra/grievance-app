@@ -426,32 +426,22 @@ class GrievanceCaseModel extends BaseModel
         $this->applyFilter($builder, $filter);
 
         $rows = $builder
-
             ->select('satisfaction, COUNT(*) total')
-
-            ->where('satisfaction IS NOT NULL', null, false)
-
             ->groupBy('satisfaction')
-
             ->orderBy('total', 'DESC')
-
             ->get()
-
             ->getResultArray();
 
         $satisfaction = [
-
             'labels' => [],
-
-            'data' => []
-
+            'data'   => []
         ];
 
         foreach ($rows as $row) {
-
-            $satisfaction['labels'][] = $row['satisfaction'];
-
-            $satisfaction['data'][] = (int)$row['total'];
+            // NULL berarti case belum diisi feedback kepuasannya sama sekali —
+            // tetap dihitung, jangan dibuang, biar persentase gak menyesatkan.
+            $satisfaction['labels'][] = $row['satisfaction'] ?? 'Belum Mengisi';
+            $satisfaction['data'][]   = (int) $row['total'];
         }
         return [
             'summary'      => $summary,

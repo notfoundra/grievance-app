@@ -110,6 +110,7 @@
                     <option value="">Select Type</option>
                     <option value="male">male</option>
                     <option value="female">female</option>
+                    <option value="anonymous">anonymous</option>
                 </select>
             </div>
 

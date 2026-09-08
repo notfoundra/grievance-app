@@ -218,33 +218,69 @@ console.log(labels);
     }).join('');
 }
 
-    function renderSatisfaction(satisfaction) {
-        const canvas = document.getElementById('satisfactionChart');
-        destroyIfExists(canvas);
+   function renderSatisfaction(satisfaction) {
+    const canvas = document.getElementById('satisfactionChart');
+    const legendEl = document.getElementById('satisfactionLegend');
+    destroyIfExists(canvas);
 
-        new Chart(canvas, {
-            type: 'bar',
-            data: {
-                labels: satisfaction.labels,
-                datasets: [{
-                    data: satisfaction.data,
-                    backgroundColor: '#2dce89',
-                    borderRadius: 6,
-                    barThickness: 28,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f0f2f7' } },
-                    x: { grid: { display: false } },
-                }
-            }
-        });
+    if (!satisfaction.labels.length) {
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        legendEl.innerHTML = '<div class="donut-legend-empty">No data for this period.</div>';
+        return;
     }
 
+   const colorMap = {
+    'Satisfied': '#2dce89',
+    'Unsatisfied': '#f5365c',
+    'Belum Mengisi': '#c7cedd',
+};
+
+    const colors = satisfaction.labels.map((label, i) => colorMap[label] || palette[i % palette.length]);
+    const total = satisfaction.data.reduce((a, b) => a + b, 0);
+
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: satisfaction.labels,
+            datasets: [{
+                data: satisfaction.data,
+                backgroundColor: colors,
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: { display: false }, // pakai legend custom di samping
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const value = ctx.parsed;
+                            const pct = total ? ((value / total) * 100).toFixed(1) : 0;
+                            return `${ctx.label}: ${value} case (${pct}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    legendEl.innerHTML = satisfaction.labels.map((label, i) => {
+        const value = satisfaction.data[i];
+        const pct = total ? ((value / total) * 100).toFixed(1) : 0;
+        const color = colors[i];
+
+        return `
+            <div class="donut-legend-item" title="${label}">
+                <span class="dot" style="background:${color}"></span>
+                <span class="name">${label}</span>
+                <span class="count">${value} (${pct}%)</span>
+            </div>
+        `;
+    }).join('');
+}
     function renderRecent(recent) {
         const body = document.getElementById('recentBody');
 console.log(recent)

@@ -45,10 +45,10 @@ class QuisionerImporter
         // judul kolom + sub-header Benar/Salah/Nilai).
         for ($row = 4; $row <= $highestRow; $row++) {
 
-            $name = trim((string) $sheet->getCell('B' . $row)->getCalculatedValue());
+            $name = trim((string) $sheet->getCell('C' . $row)->getCalculatedValue());
 
             if ($name === '') {
-                continue; // baris kosong, lewati
+                continue;
             }
 
             $rowCount++;
@@ -76,9 +76,10 @@ class QuisionerImporter
 
     protected function importRow($sheet, int $row, string $name, int $masterId): void
     {
-        $pretest    = $sheet->getCell('G' . $row)->getCalculatedValue(); // NILAI Pre Test
-        $posttest   = $sheet->getCell('J' . $row)->getCalculatedValue(); // NILAI Post Test
-        $keterangan = trim((string) $sheet->getCell('K' . $row)->getCalculatedValue());
+        $gender     = strtoupper(trim((string) $sheet->getCell('F' . $row)->getCalculatedValue()));
+        $pretest    = $sheet->getCell('I' . $row)->getCalculatedValue(); // NILAI Pre Test
+        $posttest   = $sheet->getCell('L' . $row)->getCalculatedValue(); // NILAI Post Test
+        $keterangan = trim((string) $sheet->getCell('M' . $row)->getCalculatedValue());
 
         if ($pretest === null || $pretest === '') {
             $pretest = 0;
@@ -96,9 +97,14 @@ class QuisionerImporter
             throw new \RuntimeException("Nilai Posttest tidak valid: \"{$posttest}\"");
         }
 
+        if (! in_array($gender, ['L', 'P'], true)) {
+            $gender = null; // gender kosong/gak dikenali tetap diimport, cuma gak masuk chart gender
+        }
+
         $this->quisionerModel->insert([
             'master_quisioner_id' => $masterId,
             'name'                => $name,
+            'gender'              => $gender,
             'pretest'             => (int) round((float) $pretest),
             'posttest'            => (int) round((float) $posttest),
             'keterangan'          => $keterangan ?: null,

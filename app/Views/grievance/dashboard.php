@@ -67,6 +67,7 @@
             <option value="">All Genders</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
+            <option value="Anonymous">Anonymous</option>
         </select>
     </div>
 
@@ -135,8 +136,11 @@
                 <small>Distribution</small>
             </div>
         </div>
-        <div class="chart-wrapper">
-            <canvas id="satisfactionChart"></canvas>
+        <div class="donut-flex">
+            <div class="donut-canvas-wrap">
+                <canvas id="satisfactionChart"></canvas>
+            </div>
+            <div class="donut-legend" id="satisfactionLegend"></div>
         </div>
     </div>
 

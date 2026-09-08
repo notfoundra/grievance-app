@@ -226,34 +226,64 @@
     }
 
     function renderTable(participants, passingScore) {
-        const body = document.getElementById('quizTableBody');
-        document.getElementById('quizTableCount').textContent = `${participants.length} peserta`;
+    const body = document.getElementById('quizTableBody');
+    document.getElementById('quizTableCount').textContent = `${participants.length} peserta`;
 
-        if (! participants.length) {
-            body.innerHTML = `<tr><td colspan="6" class="empty-state">Belum ada peserta untuk quisioner ini.</td></tr>`;
-            return;
-        }
-
-        body.innerHTML = participants.map(p => {
-            const pre = Number(p.pretest);
-            const post = Number(p.posttest);
-            const delta = post - pre;
-            const lulus = post >= passingScore;
-
-            return `
-                <tr>
-                    <td><strong>${p.name}</strong></td>
-                    <td>${pre}</td>
-                    <td>${post}</td>
-                    <td style="color:${delta >= 0 ? 'var(--su-success)' : 'var(--su-danger)'};font-weight:700">
-                        ${delta >= 0 ? '+' : ''}${delta}
-                    </td>
-                    <td>${p.keterangan || '-'}</td>
-                    <td><span class="status ${lulus ? 'status-closed' : 'status-overdue'}">${lulus ? 'Lulus' : 'Tidak Lulus'}</span></td>
-                </tr>
-            `;
-        }).join('');
+    if (! participants.length) {
+        body.innerHTML = `<tr><td colspan="7" class="empty-state">Belum ada peserta untuk quisioner ini.</td></tr>`;
+        return;
     }
+
+    body.innerHTML = participants.map(p => {
+        const pre = Number(p.pretest);
+        const post = Number(p.posttest);
+        const delta = post - pre;
+        const lulus = post >= passingScore;
+        const genderLabel = p.gender === 'L' ? 'Laki-laki' : (p.gender === 'P' ? 'Perempuan' : '-');
+
+        return `
+            <tr>
+                <td><strong>${p.name}</strong></td>
+                <td>${genderLabel}</td>
+                <td>${pre}</td>
+                <td>${post}</td>
+                <td style="color:${delta >= 0 ? 'var(--su-success)' : 'var(--su-danger)'};font-weight:700">
+                    ${delta >= 0 ? '+' : ''}${delta}
+                </td>
+                <td>${p.keterangan || '-'}</td>
+                <td><span class="status ${lulus ? 'status-closed' : 'status-overdue'}">${lulus ? 'Lulus' : 'Tidak Lulus'}</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+    function renderGenderChart(distribution) {
+    const canvas = document.getElementById('quizGenderChart');
+    destroyIfExists(canvas);
+
+    new Chart(canvas, {
+        type: 'pie',
+        data: {
+            labels: distribution.labels,
+            datasets: [{
+                data: distribution.data,
+                backgroundColor: ['#5e72e4', '#fb6340', '#8898aa'], // Laki-laki, Perempuan, Tidak Diketahui
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `${ctx.label}: ${ctx.parsed} orang`
+                    }
+                }
+            }
+        }
+    });
+}
 
     function loadData(masterId) {
         const batchLabel = select.options[select.selectedIndex].text;
@@ -262,7 +292,8 @@
         fetch(`${APP.baseUrl}grievance/quisioner/data/${masterId}`)
             .then(res => res.json())
             .then(data => {
-               renderPassChart(data.summary);
+             renderPassChart(data.summary);
+renderGenderChart(data.gender_distribution);
 renderDistributionChart('quizPretestChart', data.pretest_distribution);
 renderDistributionChart('quizPosttestChart', data.posttest_distribution);
 renderTable(data.participants, data.passing_score);

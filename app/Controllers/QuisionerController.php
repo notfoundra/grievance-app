@@ -62,6 +62,7 @@ class QuisionerController extends BaseController
         $sumPre  = 0;
         $sumPost = 0;
         $lulus   = 0;
+        $genderCount = ['L' => 0, 'P' => 0, 'Tidak Diketahui' => 0];
 
         foreach ($rows as $r) {
             $sumPre  += (int) $r['pretest'];
@@ -70,6 +71,19 @@ class QuisionerController extends BaseController
             if ((int) $r['posttest'] >= $passingScore) {
                 $lulus++;
             }
+
+            if ($r['gender'] === 'L') {
+                $genderCount['L']++;
+            } elseif ($r['gender'] === 'P') {
+                $genderCount['P']++;
+            } else {
+                $genderCount['Tidak Diketahui']++;
+            }
+        }
+
+        // Buang kategori "Tidak Diketahui" dari chart kalau memang gak ada datanya, biar legend gak nampilin nol percuma
+        if ($genderCount['Tidak Diketahui'] === 0) {
+            unset($genderCount['Tidak Diketahui']);
         }
 
         $total = count($rows);
@@ -83,12 +97,16 @@ class QuisionerController extends BaseController
         ];
 
         return $this->response->setJSON([
-            'status'              => true,
-            'summary'             => $summary,
-            'passing_score'       => $passingScore,
+            'status'                => true,
+            'summary'               => $summary,
+            'passing_score'         => $passingScore,
+            'gender_distribution'   => [
+                'labels' => array_map(fn($k) => $k === 'L' ? 'Laki-laki' : ($k === 'P' ? 'Perempuan' : $k), array_keys($genderCount)),
+                'data'   => array_values($genderCount),
+            ],
             'pretest_distribution'  => $this->buildDistribution($rows, 'pretest'),
             'posttest_distribution' => $this->buildDistribution($rows, 'posttest'),
-            'participants'        => $rows,
+            'participants'          => $rows,
         ]);
     }
 
