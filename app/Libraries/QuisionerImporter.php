@@ -135,43 +135,4 @@ class QuisionerImporter
         $this->existingNames[] = strtolower($name);
         $this->created++;
     }
-
-    protected function importRow($sheet, int $row, string $name, int $masterId): void
-    {
-        $gender     = strtoupper(trim((string) $sheet->getCell('F' . $row)->getCalculatedValue()));
-        $pretest    = $sheet->getCell('I' . $row)->getCalculatedValue(); // NILAI Pre Test
-        $posttest   = $sheet->getCell('L' . $row)->getCalculatedValue(); // NILAI Post Test
-        $keterangan = trim((string) $sheet->getCell('M' . $row)->getCalculatedValue());
-
-        if ($pretest === null || $pretest === '') {
-            $pretest = 0;
-        }
-
-        if ($posttest === null || $posttest === '') {
-            $posttest = 0;
-        }
-
-        if (! is_numeric($pretest)) {
-            throw new \RuntimeException("Nilai Pretest tidak valid: \"{$pretest}\"");
-        }
-
-        if (! is_numeric($posttest)) {
-            throw new \RuntimeException("Nilai Posttest tidak valid: \"{$posttest}\"");
-        }
-
-        if (! in_array($gender, ['L', 'P'], true)) {
-            $gender = null; // gender kosong/gak dikenali tetap diimport, cuma gak masuk chart gender
-        }
-
-        $this->quisionerModel->insert([
-            'master_quisioner_id' => $masterId,
-            'name'                => $name,
-            'gender'              => $gender,
-            'pretest'             => (int) round((float) $pretest),
-            'posttest'            => (int) round((float) $posttest),
-            'keterangan'          => $keterangan ?: null,
-        ]);
-
-        $this->created++;
-    }
 }
