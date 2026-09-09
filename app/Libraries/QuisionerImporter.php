@@ -29,7 +29,7 @@ class QuisionerImporter
     /**
      * @return array{master_id:int, created:int, skipped_duplicate:int, errors:array, total_rows:int}
      */
-    public function run(int $masterId, string $filePath): array
+    public function run(int $masterId, string $filePath, $tanggal): array
     {
         set_time_limit(0);
 
@@ -69,7 +69,7 @@ class QuisionerImporter
             $rowCount++;
 
             try {
-                $this->importRow($sheet, $row, $name, $masterId);
+                $this->importRow($sheet, $row, $name, $masterId, $tanggal);
             } catch (\Throwable $e) {
                 $this->errors[] = ['row' => $row, 'reason' => $e->getMessage()];
             }
@@ -90,7 +90,7 @@ class QuisionerImporter
         ];
     }
 
-    protected function importRow($sheet, int $row, string $name, int $masterId): void
+    protected function importRow($sheet, int $row, string $name, int $masterId, $tanggal): void
     {
         if (in_array(strtolower($name), $this->existingNames, true)) {
             $this->skippedDuplicate++;
@@ -129,6 +129,7 @@ class QuisionerImporter
             'pretest'             => (int) round((float) $pretest),
             'posttest'            => (int) round((float) $posttest),
             'keterangan'          => $keterangan ?: null,
+            'tanggal'               => $tanggal,
         ]);
 
         // Supaya nama duplikat DALAM file yang sama juga ke-skip di baris berikutnya

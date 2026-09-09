@@ -216,7 +216,7 @@ class QuisionerController extends BaseController
 
         try {
             $importer = new QuisionerImporter();
-            $result   = $importer->run($masterId, $tmpPath);
+            $result   = $importer->run($masterId, $tmpPath, $tanggal);
         } catch (\Throwable $e) {
             @unlink($tmpPath);
 
