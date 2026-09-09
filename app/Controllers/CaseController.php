@@ -181,6 +181,7 @@ class CaseController extends BaseController
             'priority_id'           => 'required|integer',
             'target_response_date'  => 'required|valid_date',
             'target_closure_date'   => 'required|valid_date',
+            'received_date'   => 'required|valid_date',
             'rating'                => 'permit_empty|integer|greater_than[0]|less_than[6]',
         ];
 
@@ -193,6 +194,7 @@ class CaseController extends BaseController
 
         $targetResponse = $this->request->getPost('target_response_date');
         $targetClosure  = $this->request->getPost('target_closure_date');
+        $receivedDate  = $this->request->getPost('received_date');
 
         if (strtotime($targetClosure) < strtotime($targetResponse)) {
             return $this->response->setStatusCode(422)->setJSON([
@@ -207,6 +209,7 @@ class CaseController extends BaseController
             'pic'                  => $this->request->getPost('pic'),
             'target_response_date' => $targetResponse,
             'target_closure_date'  => $targetClosure,
+            'received_date'  => $receivedDate,
             'root_cause'           => $this->request->getPost('root_cause'),
             'corrective_action'    => $this->request->getPost('corrective_action'),
             'management_response'  => $this->request->getPost('management_response'),

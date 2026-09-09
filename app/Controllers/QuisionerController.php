@@ -210,6 +210,7 @@ class QuisionerController extends BaseController
         }
 
         $masterId = (int) $this->request->getPost('master_quisioner_id');
+        $tanggal = $this->request->getPost('tanggal');
         $tmpPath  = WRITEPATH . 'uploads/tmp_quiz_' . $file->getRandomName();
         $file->move(dirname($tmpPath), basename($tmpPath));
 

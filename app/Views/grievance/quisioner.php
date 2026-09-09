@@ -218,6 +218,10 @@
                         <span class="hint" style="color:var(--su-danger)">Belum ada quisioner. Klik "＋ Add" di dropdown atas halaman terlebih dahulu.</span>
                     <?php endif; ?>
                 </div>
+                <div class="form-group mb-3">
+                    <label>Masukan Tanggal Training <span style="color:var(--su-danger)">*</span></label>
+                    <input id="tanggal" type="date" name="tanggal_training">
+                </div>
 
                 <label class="upload-box" id="quizDropArea">
                     <i class="bi bi-file-earmark-excel"></i>

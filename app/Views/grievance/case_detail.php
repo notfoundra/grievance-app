@@ -247,7 +247,7 @@
                     </div>
                     <div class="form-group">
                         <label>Received Date</label>
-                        <input type="date" name="target_closure_date" value="<?= esc($case['received_date']) ?>" required>
+                        <input type="date" name="received_date" value="<?= esc($case['received_date']) ?>" required>
                     </div>
 
                 </div>
