@@ -54,10 +54,19 @@ class QuisionerController extends BaseController
     {
         $passingScore = config('Quisioner')->passingScore;
 
-        $rows = $this->q
-            ->where('master_quisioner_id', $masterId)
-            ->orderBy('name')
-            ->findAll();
+        // 1. Tangkap parameter tanggal dari URL
+        $tanggal = $this->request->getGet('tanggal');
+
+        // 2. Siapkan query builder dasar
+        $builder = $this->q->where('master_quisioner_id', $masterId);
+
+        // 3. Jika tanggal dipilih (tidak kosong), filter berdasarkan kolom tanggal_training
+        if (!empty($tanggal)) {
+            $builder->where('tanggal', $tanggal);
+        }
+
+        // Eksekusi query
+        $rows = $builder->orderBy('name')->findAll();
 
         $sumPre  = 0;
         $sumPost = 0;
@@ -81,7 +90,7 @@ class QuisionerController extends BaseController
             }
         }
 
-        // Buang kategori "Tidak Diketahui" dari chart kalau memang gak ada datanya, biar legend gak nampilin nol percuma
+        // Buang kategori "Tidak Diketahui" dari chart kalau memang gak ada datanya
         if ($genderCount['Tidak Diketahui'] === 0) {
             unset($genderCount['Tidak Diketahui']);
         }
@@ -109,7 +118,26 @@ class QuisionerController extends BaseController
             'participants'          => $rows,
         ]);
     }
+    public function getAvailableDates($masterId)
+    {
+        // Ambil tanggal unik dari tabel quisioner berdasarkan master_quisioner_id
+        $dates = $this->q
+            ->select('tanggal')
+            ->where('master_quisioner_id', $masterId)
+            ->where('tanggal !=', '')
+            ->where('tanggal IS NOT NULL')
+            ->groupBy('tanggal')
+            ->orderBy('tanggal', 'DESC')
+            ->findAll();
 
+        // Ekstrak hanya value tanggalnya saja ke dalam array murni
+        $dateList = array_column($dates, 'tanggal');
+
+        return $this->response->setJSON([
+            'status' => true,
+            'dates'  => $dateList
+        ]);
+    }
     /**
      * Kelompokkan nilai jadi rentang (0-59, 60-69, 70-79, 80-89, 90-100),
      * dipakai buat pie chart distribusi nilai — jauh lebih kebaca ketimbang

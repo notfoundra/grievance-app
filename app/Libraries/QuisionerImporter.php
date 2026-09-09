@@ -29,7 +29,7 @@ class QuisionerImporter
     /**
      * @return array{master_id:int, created:int, skipped_duplicate:int, errors:array, total_rows:int}
      */
-    public function run(int $masterId, string $filePath, $tanggal): array
+    public function run(int $masterId, string $filePath, string $tanggal): array
     {
         set_time_limit(0);
 
@@ -90,7 +90,7 @@ class QuisionerImporter
         ];
     }
 
-    protected function importRow($sheet, int $row, string $name, int $masterId, $tanggal): void
+    protected function importRow($sheet, int $row, string $name, int $masterId, string $tanggal): void
     {
         if (in_array(strtolower($name), $this->existingNames, true)) {
             $this->skippedDuplicate++;

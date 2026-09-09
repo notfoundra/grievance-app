@@ -274,14 +274,14 @@
     // ================= CHART & TABLE (hanya jalan kalau sudah ada data) =================
 
     const select = document.getElementById('quizSelect');
+    const selectDate = document.getElementById('selectDate');
 
-    if (! select || ! select.value) return;
+    if (!select || !select.value) return;
 
     function destroyIfExists(canvasEl) {
         const existing = Chart.getChart(canvasEl);
         if (existing) existing.destroy();
     }
-
     function renderPassChart(summary) {
         const canvas = document.getElementById('quizPassChart');
         destroyIfExists(canvas);
@@ -399,29 +399,103 @@
     });
 }
 
-    function loadData(masterId) {
-        const batchLabel = select.options[select.selectedIndex].text;
-        document.getElementById('quizBatchLabel').textContent = batchLabel;
-
-        fetch(`${APP.baseUrl}grievance/quisioner/data/${masterId}`)
+   function loadDates(masterId, callback) {
+        fetch(`${APP.baseUrl}grievance/quisioner/getAvailableDates/${masterId}`)
             .then(res => res.json())
             .then(data => {
-             renderPassChart(data.summary);
-renderGenderChart(data.gender_distribution);
-renderDistributionChart('quizPretestChart', data.pretest_distribution);
-renderDistributionChart('quizPosttestChart', data.posttest_distribution);
-renderTable(data.participants, data.passing_score);
+                // Bersihkan select dan beri opsi default "Semua Tanggal"
+                selectDate.innerHTML = '<option value="">Semua Tanggal</option>';
+                
+                if (data.status && data.dates.length > 0) {
+                    data.dates.forEach(date => {
+                        const option = document.createElement('option');
+                        option.value = date;
+                        option.textContent = date;
+                        selectDate.appendChild(option);
+                    });
+                }
+
+                // Setelah tanggal sukses dimuat, jalankan callback (load data chart)
+                if (callback) callback();
+            })
+            .catch(() => {
+                selectDate.innerHTML = '<option value="">Semua Tanggal</option>';
+                if (callback) callback();
+            });
+    }
+
+    // 2. Fungsi memuat data Chart & Table
+   function loadData() {
+        if (!select.value) return;
+
+        const masterId = select.value;
+        const tanggal = selectDate ? selectDate.value : '';
+
+        const batchLabel = select.options[select.selectedIndex].text;
+        const dateInfo = tanggal ? ` (Tanggal: ${tanggal})` : '';
+        document.getElementById('quizBatchLabel').textContent = batchLabel + dateInfo;
+
+        let url = `${APP.baseUrl}grievance/quisioner/data/${masterId}`;
+        if (tanggal) {
+            url += `?tanggal=${tanggal}`;
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                // Render Chart & Table
+                renderPassChart(data.summary);
+                renderGenderChart(data.gender_distribution);
+                renderDistributionChart('quizPretestChart', data.pretest_distribution);
+                renderDistributionChart('quizPosttestChart', data.posttest_distribution);
+                renderTable(data.participants, data.passing_score);
+                
+                // ========================================================
+                // TAMBAHAN: UPDATE KARTU KPI
+                // ========================================================
+                
+                // Hitung persen kelulusan
+                let passRate = 0;
+                if (data.summary.total > 0) {
+                    passRate = ((data.summary.lulus / data.summary.total) * 100).toFixed(1);
+                }
+                
+                // Tentukan angka Total Quisioner (Sesi)
+                // Jika tanggal difilter, nilainya 1. Jika tidak, total sesi = jumlah isi dropdown dikurangi 1 (opsi "Semua Tanggal")
+                let totalSesi = tanggal ? 1 : (selectDate.options.length - 1);
+                if (totalSesi < 0) totalSesi = 0;
+
+                // Terapkan ke HTML berdasarkan ID
+                document.getElementById('kpiTotalQuisioner').textContent = totalSesi;
+                document.getElementById('kpiTotalPeserta').textContent = data.summary.total;
+                document.getElementById('kpiPassRate').textContent = passRate + '%';
+                document.getElementById('kpiPassingScore').innerHTML = '&ge; ' + data.passing_score;
+                
+                // ========================================================
+
                 document.getElementById('quizAvgLabel').textContent =
                     `Rata-rata Pretest: ${data.summary.avg_pretest} · Posttest: ${data.summary.avg_posttest}`;
             })
             .catch(() => {
                 document.getElementById('quizTableBody').innerHTML =
-                    `<tr><td colspan="6" class="empty-state">Gagal memuat data.</td></tr>`;
+                    `<tr><td colspan="7" class="empty-state">Gagal memuat data.</td></tr>`;
             });
     }
 
-    select.addEventListener('change', () => loadData(select.value));
+    // 3. Event Listener
+    if (select) {
+        // Jika Quisioner diubah: load list tanggal dulu, setelah selesai baru load Data Chart
+        select.addEventListener('change', () => {
+            loadDates(select.value, loadData);
+        });
+    }
 
-    loadData(select.value);
+    if (selectDate) {
+        // Jika hanya tanggalnya saja yang diubah, langsung load Data Chart
+        selectDate.addEventListener('change', loadData);
+    }
+
+    // 4. Initial load saat halaman pertama kali dibuka
+    loadDates(select.value, loadData);
 
 })();

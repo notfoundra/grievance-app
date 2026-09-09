@@ -28,19 +28,15 @@
             <?php endif; ?>
         </select>
     </div>
+
     <div class="field" style="min-width:280px">
         <label>Pilih Tanggal</label>
+        <!-- Select ini akan diisi otomatis lewat JS -->
         <select id="selectDate">
-            <option> Pilih Tanggal</option>
-            <?php if (empty($tanggal)) : ?>
-                <option value="">Belum ada data quisioner</option>
-            <?php else : ?>
-                <?php foreach ($list as $m) : ?>
-                    <option value="<?= $m['id'] ?>" <?= (string) $selectedId === (string) $m['id'] ? 'selected' : '' ?>><?= esc($m['title']) ?></option>
-                <?php endforeach; ?>
-            <?php endif; ?>
+            <option value="">Semua Tanggal</option>
         </select>
     </div>
+
     <button type="button" class="btn btn-soft" id="btnOpenAddQuiz" style="align-self:flex-end">
         <i class="bi bi-plus-circle"></i> Quisioner Baru
     </button>
@@ -57,28 +53,32 @@
         <div class="kpi card" style="--tone:linear-gradient(135deg,#5e72e4,#324cdd)">
             <div>
                 <div class="kpi-label">Total Quisioner</div>
-                <div class="kpi-value"><?= (int) $totalBatches ?></div>
+                <!-- Tambahkan id="kpiTotalQuisioner" -->
+                <div class="kpi-value" id="kpiTotalQuisioner"><?= (int) $totalBatches ?></div>
             </div>
             <div class="kpi-icon"><i class="bi bi-clipboard-data"></i></div>
         </div>
         <div class="kpi card" style="--tone:linear-gradient(135deg,#11cdef,#1171ef)">
             <div>
                 <div class="kpi-label">Total Peserta</div>
-                <div class="kpi-value"><?= (int) $totalParticipants ?></div>
+                <!-- Tambahkan id="kpiTotalPeserta" -->
+                <div class="kpi-value" id="kpiTotalPeserta"><?= (int) $totalParticipants ?></div>
             </div>
             <div class="kpi-icon"><i class="bi bi-people"></i></div>
         </div>
         <div class="kpi card" style="--tone:linear-gradient(135deg,#2dce89,#2dcecc)">
             <div>
                 <div class="kpi-label">Tingkat Kelulusan</div>
-                <div class="kpi-value"><?= esc($passRate) ?>%</div>
+                <!-- Tambahkan id="kpiPassRate" -->
+                <div class="kpi-value" id="kpiPassRate"><?= esc($passRate) ?>%</div>
             </div>
             <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
         </div>
         <div class="kpi card" style="--tone:linear-gradient(135deg,#fb6340,#fbb140)">
             <div>
                 <div class="kpi-label">Passing Score</div>
-                <div class="kpi-value">&ge; <?= (int) $passingScore ?></div>
+                <!-- Tambahkan id="kpiPassingScore" -->
+                <div class="kpi-value" id="kpiPassingScore">&ge; <?= (int) $passingScore ?></div>
             </div>
             <div class="kpi-icon"><i class="bi bi-flag"></i></div>
         </div>
@@ -233,7 +233,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label>Masukan Tanggal Training <span style="color:var(--su-danger)">*</span></label>
-                    <input id="tanggal" type="date" name="tanggal_training">
+                    <input id="tanggal" type="date" name="tanggal">
                 </div>
 
                 <label class="upload-box" id="quizDropArea">
