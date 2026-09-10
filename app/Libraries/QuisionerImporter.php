@@ -88,11 +88,6 @@ class QuisionerImporter
 
     protected function importRow($sheet, int $row, string $name, int $masterId, string $tanggal): void
     {
-        if (in_array(strtolower($name), $this->existingNames, true)) {
-            $this->skippedDuplicate++;
-            return;
-        }
-
         $gender     = strtoupper(trim((string) $sheet->getCell('F' . $row)->getCalculatedValue()));
         $pretest    = $sheet->getCell('I' . $row)->getCalculatedValue();
         $posttest   = $sheet->getCell('L' . $row)->getCalculatedValue();
