@@ -39,10 +39,6 @@ class QuisionerImporter
             throw new \RuntimeException('Quisioner tidak ditemukan.');
         }
 
-        // Preload nama peserta yang sudah ada di sesi ini, supaya re-import file yang sama
-        // (atau nama ganda di dalam satu file) tidak menabrak unique constraint mentah-mentah,
-        // melainkan dilewati dengan pesan yang jelas.
-
 
         $spreadsheet = IOFactory::load($filePath);
         $sheet       = $spreadsheet->getActiveSheet();
@@ -92,7 +88,7 @@ class QuisionerImporter
         $pretest    = $sheet->getCell('I' . $row)->getCalculatedValue();
         $posttest   = $sheet->getCell('L' . $row)->getCalculatedValue();
         $keterangan = trim((string) $sheet->getCell('M' . $row)->getCalculatedValue());
-        // pushhhhh
+
         if ($pretest === null || $pretest === '') {
             $pretest = 0;
         }
@@ -123,8 +119,6 @@ class QuisionerImporter
             'tanggal'               => $tanggal,
         ]);
 
-        // Supaya nama duplikat DALAM file yang sama juga ke-skip di baris berikutnya
-        $this->existingNames[] = strtolower($name);
         $this->created++;
     }
 }
