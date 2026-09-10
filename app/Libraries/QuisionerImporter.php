@@ -42,11 +42,7 @@ class QuisionerImporter
         // Preload nama peserta yang sudah ada di sesi ini, supaya re-import file yang sama
         // (atau nama ganda di dalam satu file) tidak menabrak unique constraint mentah-mentah,
         // melainkan dilewati dengan pesan yang jelas.
-        $existing = $this->quisionerModel
-            ->where('master_quisioner_id', $masterId)
-            ->findColumn('name');
 
-        $this->existingNames = $existing ? array_map('strtolower', $existing) : [];
 
         $spreadsheet = IOFactory::load($filePath);
         $sheet       = $spreadsheet->getActiveSheet();
