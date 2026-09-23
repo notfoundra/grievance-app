@@ -252,7 +252,7 @@ class CaseController extends BaseController
         }
 
         $files      = $this->request->getFileMultiple('attachment') ?? [];
-        $fileErrors = $this->validateAttachments($files);
+        $fileErrors = $this->attachments->validate($files);
 
         if (! empty($fileErrors)) {
             return $this->response->setStatusCode(422)->setJSON([
