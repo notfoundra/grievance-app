@@ -11,6 +11,7 @@ class GrievanceUpdateModel extends BaseModel
     protected $allowedFields = [
         'case_id',
         'status_id',
+        'update_date',
         'note',
         'updated_by'
     ];

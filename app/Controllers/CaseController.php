@@ -55,6 +55,7 @@ class CaseController extends BaseController
 
         $updates = $updateModel
             ->where('case_id', $id)
+            ->orderBy('update_date', 'DESC')
             ->orderBy('created_at', 'DESC')
             ->findAll();
 
@@ -240,8 +241,9 @@ class CaseController extends BaseController
         }
 
         $rules = [
-            'status_id' => 'required|integer',
-            'note'      => 'required|min_length[5]',
+            'status_id'   => 'required|integer',
+            'update_date' => 'required|valid_date',
+            'note'        => 'required|min_length[5]',
         ];
 
         if (! $this->validate($rules)) {
@@ -264,10 +266,11 @@ class CaseController extends BaseController
         $updateModel = new GrievanceUpdateModel();
 
         $updateId = $updateModel->insert([
-            'case_id'    => $id,
-            'status_id'  => $this->request->getPost('status_id'),
-            'note'       => $this->request->getPost('note'),
-            'updated_by' => current_user()['name'] ?? 'System',
+            'case_id'     => $id,
+            'status_id'   => $this->request->getPost('status_id'),
+            'update_date' => $this->request->getPost('update_date'),
+            'note'        => $this->request->getPost('note'),
+            'updated_by'  => current_user()['name'] ?? 'System',
         ], true);
 
         $this->attachments->store((int) $id, $files, (int) $updateId);

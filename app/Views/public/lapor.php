@@ -257,6 +257,7 @@
                         <div class="gender-toggle">
                             <label><input type="radio" name="gender" value="Male" <?= old('gender') === 'Male' ? 'checked' : '' ?> required> Laki-laki</label>
                             <label><input type="radio" name="gender" value="Female" <?= old('gender') === 'Female' ? 'checked' : '' ?>> Perempuan</label>
+                            <label><input type="radio" name="gender" value="Anonymous" <?= old('gender') === 'Anonymous' ? 'checked' : '' ?>> Tidak Disebutkan</label>
                         </div>
                     </div>
 

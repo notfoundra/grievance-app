@@ -38,7 +38,7 @@ class PublicSubmissionController extends BaseController
 
         $rules = [
             'site_id'      => 'required|integer|is_not_unique[master_sites.id]',
-            'gender'       => 'required|in_list[Male,Female]',
+            'gender' => 'required|in_list[Male,Female,Anonymous]',
             'case_type_id' => 'required|integer|is_not_unique[master_case_types.id]',
             'message'      => 'required|min_length[10]|max_length[5000]',
         ];

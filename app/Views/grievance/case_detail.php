@@ -94,9 +94,14 @@
                             </div>
                         <?php endif; ?>
 
+                        <?php
+                        // Fallback ke created_at untuk entri lama (sebelum kolom update_date ada)
+                        $eventDate = $u['update_date'] ?: date('Y-m-d', strtotime($u['created_at']));
+                        ?>
                         <p class="meta">
                             <?= esc($u['updated_by'] ?: 'System') ?> ·
-                            <?= esc(date('d M Y, H:i', strtotime($u['created_at']))) ?>
+                            <?= esc(date('d M Y', strtotime($eventDate))) ?>
+                            <span style="opacity:.6">(dicatat <?= esc(date('d M Y, H:i', strtotime($u['created_at']))) ?>)</span>
                         </p>
                     </div>
                 <?php endforeach; ?>
@@ -135,6 +140,9 @@
                     </div>
                     <div class="info-item"><label>Case Type</label>
                         <div><?= esc($case['case_type'] ?? '-') ?></div>
+                    </div>
+                    <div class="info-item"><label>Gender</label>
+                        <div><?= esc($case['gender'] ?: '-') ?></div>
                     </div>
                     <div class="info-item"><label>Confidential</label>
                         <div><?= esc($case['confidential']) ?></div>
@@ -331,6 +339,11 @@
             <div class="modal-body">
 
                 <div class="form-group mb-3">
+                    <label>Tanggal Follow Up <span style="color:var(--su-danger)">*</span></label>
+                    <input type="date" name="update_date" value="<?= date('Y-m-d') ?>" required>
+                </div>
+
+                <div class="form-group mb-3">
                     <label>New Status</label>
                     <select name="status_id" required>
                         <?php foreach ($statuses as $s) : ?>
@@ -350,7 +363,6 @@
                 </div>
 
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-soft" data-close="modalFollowUp">Cancel</button>
                 <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit Follow Up</button>
